@@ -89,24 +89,17 @@ class PieceType(IntEnum):
     WHITE_QUEEN = 11
     WHITE_BISHOP = 12
 
-    def __str__(self) -> str:
-        return {
-            PieceType.EMPTY: " ",
-            PieceType.BLACK_ROOK: "♜",
-            PieceType.BLACK_KNIGHT: "♞",
-            PieceType.BLACK_BISHOP: "♝",
-            PieceType.BLACK_KING: "♚",
-            PieceType.BLACK_QUEEN: "♛",
-            PieceType.BLACK_PAWN: "♟",
-            PieceType.WHITE_ROOK: "♖",
-            PieceType.WHITE_KNIGHT: "♘",
-            PieceType.WHITE_BISHOP: "♗",
-            PieceType.WHITE_KING: "♔",
-            PieceType.WHITE_QUEEN: "♕",
-            PieceType.WHITE_PAWN: "♙",
-        }[self]
+    def get_color(self) -> "Color":
+        if self == PieceType.EMPTY:
+            return Color.NOBODY
+
+        if self <= PieceType.BLACK_BISHOP:
+            return Color.BLACK
+
+        return Color.WHITE
 
 
 class Color(IntEnum):
     BLACK = 0
     WHITE = 1
+    NOBODY = 2

@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List
+from typing import Any, List
 
 from chessbot.board_printer import print_board
 from chessbot.enums import Color, PieceType, Square
@@ -15,8 +15,8 @@ class Board:
         self.fields[Square.G8] = PieceType.BLACK_KNIGHT
         self.fields[Square.C8] = PieceType.BLACK_BISHOP
         self.fields[Square.F8] = PieceType.BLACK_BISHOP
-        self.fields[Square.D8] = PieceType.BLACK_KING
-        self.fields[Square.E8] = PieceType.BLACK_QUEEN
+        self.fields[Square.D8] = PieceType.BLACK_QUEEN
+        self.fields[Square.E8] = PieceType.BLACK_KING
 
         for square in range(Square.A7, Square.A6):
             self.fields[square] = PieceType.BLACK_PAWN
@@ -27,8 +27,8 @@ class Board:
         self.fields[Square.G1] = PieceType.WHITE_KNIGHT
         self.fields[Square.C1] = PieceType.WHITE_BISHOP
         self.fields[Square.F1] = PieceType.WHITE_BISHOP
-        self.fields[Square.D1] = PieceType.WHITE_KING
-        self.fields[Square.E1] = PieceType.WHITE_QUEEN
+        self.fields[Square.D1] = PieceType.WHITE_QUEEN
+        self.fields[Square.E1] = PieceType.WHITE_KING
 
         for square in range(Square.A2, Square.A1):
             self.fields[square] = PieceType.WHITE_PAWN
@@ -41,8 +41,8 @@ class Board:
     def copy(self) -> "Board":
         return deepcopy(self)
 
-    def show(self) -> None:
-        print_board(self)
+    def show(self, *args: Any, **kwargs: Any) -> None:
+        print_board(self, *args, **kwargs)
 
     def find_pieces(self, piece_type: PieceType) -> List[Square]:
         squares: List[Square] = []

@@ -1,5 +1,7 @@
 from enum import IntEnum
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional, Set
+
+from chessbot.enums import Color, PieceType, Square
 
 if TYPE_CHECKING:
     from chessbot.board import Board
@@ -10,14 +12,19 @@ RESET_COLORS = "\033[0m"
 
 # Matches Bash text color codes
 # Source: https://misc.flogisoft.com/bash/tip_colors_and_formatting
-class Color(IntEnum):
+class BashColor(IntEnum):
     DARK_SQUARE = 172
     LIGHT_SQUARE = 222
     EDGE = 52
     EDGE_TEXT = 7
+    WHITE_PIECE = 20
+    BLACK_PIECE = 0
+    HIGHLIGHT_RED = 197
 
 
-def colorize(text: str, bg: Optional[Color] = None, fg: Optional[Color] = None) -> str:
+def colorize(
+    text: str, bg: Optional[BashColor] = None, fg: Optional[BashColor] = None
+) -> str:
     colorized = ""
 
     if bg:
@@ -32,7 +39,7 @@ def colorize(text: str, bg: Optional[Color] = None, fg: Optional[Color] = None) 
     return colorized
 
 
-def v_split(left: Optional[Color] = None, right: Optional[Color] = None) -> str:
+def v_split(left: Optional[BashColor] = None, right: Optional[BashColor] = None) -> str:
     if not (left or right):
         return " "
 
@@ -42,46 +49,81 @@ def v_split(left: Optional[Color] = None, right: Optional[Color] = None) -> str:
     return colorize("▌", fg=left, bg=right)
 
 
-def print_board(board: "Board") -> None:
-    output = v_split(right=Color.EDGE)
-    output += colorize("  a b c d e f g h  ", bg=Color.EDGE, fg=Color.EDGE_TEXT)
-    output += v_split(left=Color.EDGE)
+def colorize_piece(piece: PieceType, bg: BashColor) -> str:
+    text = {
+        PieceType.EMPTY: " ",
+        PieceType.BLACK_PAWN: "♟",
+        PieceType.BLACK_ROOK: "♜",
+        PieceType.BLACK_KNIGHT: "♞",
+        PieceType.BLACK_KING: "♚",
+        PieceType.BLACK_QUEEN: "♛",
+        PieceType.BLACK_BISHOP: "♝",
+        PieceType.WHITE_PAWN: "♟",
+        PieceType.WHITE_ROOK: "♜",
+        PieceType.WHITE_KNIGHT: "♞",
+        PieceType.WHITE_KING: "♚",
+        PieceType.WHITE_QUEEN: "♛",
+        PieceType.WHITE_BISHOP: "♝",
+    }[piece]
+
+    piece_color = {
+        Color.NOBODY: None,
+        Color.BLACK: BashColor.BLACK_PIECE,
+        Color.WHITE: BashColor.WHITE_PIECE,
+    }[piece.get_color()]
+
+    return colorize(text, bg=bg, fg=piece_color)
+
+
+def print_board(board: "Board", red: Set[Square] = set()) -> None:
+
+    # background color by square id (0 up to 63)
+    square_colors: List[BashColor] = []
+
+    for y in range(8):
+        for x in range(8):
+            is_light = (x + y) % 2 == 0
+            square = Square(8 * y + x)
+
+            if square in red:
+                color = BashColor.HIGHLIGHT_RED
+            elif is_light:
+                color = BashColor.LIGHT_SQUARE
+            else:
+                color = BashColor.DARK_SQUARE
+
+            square_colors.append(color)
+
+    output = v_split(right=BashColor.EDGE)
+    output += colorize("  a b c d e f g h  ", bg=BashColor.EDGE, fg=BashColor.EDGE_TEXT)
+    output += v_split(left=BashColor.EDGE)
     output += "\n"
 
     for y in range(8):
-        output += v_split(right=Color.EDGE)
-        output += colorize(str(y + 1), bg=Color.EDGE, fg=Color.EDGE_TEXT)
+        output += v_split(right=BashColor.EDGE)
+        output += colorize(str(8 - y), bg=BashColor.EDGE, fg=BashColor.EDGE_TEXT)
 
         for x in range(8):
+            square_color = square_colors[8 * y + x]
+
             if x == 0:
-                left = Color.EDGE
-            elif (x + y) % 2 == 0:
-                left = Color.DARK_SQUARE
+                left = BashColor.EDGE
             else:
-                left = Color.LIGHT_SQUARE
+                left = square_colors[8 * y + x - 1]
 
-            if (x + y) % 2 == 0:
-                right = Color.LIGHT_SQUARE
-            else:
-                right = Color.DARK_SQUARE
+            output += v_split(left=left, right=square_color)
+            output += colorize_piece(board.fields[8 * y + x], bg=square_color)
 
-            output += v_split(left=left, right=right)
+        row_last_square_color = square_colors[8 * y + 7]
 
-            field = str(board.fields[y * 8 + x])
-            output += colorize(field, bg=right)
-
-        if y % 2 == 0:
-            output += v_split(left=Color.DARK_SQUARE, right=Color.EDGE)
-        else:
-            output += v_split(left=Color.LIGHT_SQUARE, right=Color.EDGE)
-
-        output += colorize(" ", bg=Color.EDGE)
-        output += v_split(left=Color.EDGE)
+        output += v_split(left=row_last_square_color, right=BashColor.EDGE)
+        output += colorize(" ", bg=BashColor.EDGE)
+        output += v_split(left=BashColor.EDGE)
         output += "\n"
 
-    output += v_split(right=Color.EDGE)
-    output += colorize("                   ", bg=Color.EDGE, fg=Color.EDGE_TEXT)
-    output += v_split(left=Color.EDGE)
+    output += v_split(right=BashColor.EDGE)
+    output += colorize("                   ", bg=BashColor.EDGE, fg=BashColor.EDGE_TEXT)
+    output += v_split(left=BashColor.EDGE)
     output += "\n"
 
     print(output)
