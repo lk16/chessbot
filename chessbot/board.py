@@ -87,6 +87,10 @@ class Board:
 
             move_square = Square.from_file_and_rank(move_x, move_y)
 
+            if self.fields[move_square].get_color() == self.turn:
+                # we're about to capture our own piece
+                continue
+
             child = self.copy()
             child.fields[move_square] = child.fields[square]
             child.fields[square] = PieceType.EMPTY
@@ -175,6 +179,10 @@ class Board:
                 continue
 
             move_square = Square.from_file_and_rank(move_x, move_y)
+
+            if self.fields[move_square].get_color() == self.turn:
+                # we're about to capture our own piece
+                continue
 
             child = self.copy()
             child.fields[move_square] = child.fields[square]
