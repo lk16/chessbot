@@ -57,9 +57,6 @@ class Board:
                 squares.append(Square(square))
         return squares
 
-    def get_king_moves(self, square: Square) -> List["Board"]:
-        return []  # TODO
-
     def get_knight_moves(self, square: Square) -> List["Board"]:
         return []  # TODO
 
@@ -113,3 +110,41 @@ class Board:
             moves += self.get_pawn_moves(pawn_square)
 
         return moves
+
+    def get_king_moves(self, square: Square) -> List["Board"]:
+        # values are x,y
+        # where positive x to the right
+        # and positive y means down
+        deltas = [
+            (-1, -1),  # left top
+            (-1, 0),  # left
+            (-1, 1),  # left down
+            (0, -1),  # up
+            (0, 1),  # down
+            (1, -1),  # right top
+            (1, 0),  # right
+            (1, 1),  # right down
+        ]
+
+        rank = square.rank()
+        file = square.file()
+
+        children: List["Board"] = []
+
+        for dx, dy in deltas:
+            move_x = file + dx
+            move_y = rank + dy
+
+            if move_x < 0 or move_x > 7 or move_y < 0 or move_y > 7:
+                # we're walking off the board
+                continue
+
+            move_square = Square.from_file_and_rank(move_x, move_y)
+
+            child = self.copy()
+            child.fields[move_square] = child.fields[square]
+            child.fields[square] = PieceType.EMPTY
+
+            children.append(child)
+
+        return children

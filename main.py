@@ -5,12 +5,11 @@ from chessbot.enums import PieceType, Square
 
 
 def main() -> None:
-    board = Board.start()
-    board.show()
-
     board = Board.empty()
-    board.fields[Square.B3] = PieceType.WHITE_KING
-    board.show()
+    board.fields[Square.H1] = PieceType.WHITE_KING
+
+    for child in board.get_moves():
+        child.show()
 
 
 if __name__ == "__main__":

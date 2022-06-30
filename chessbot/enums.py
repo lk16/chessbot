@@ -67,11 +67,15 @@ class Square(IntEnum):
     G1 = 62
     H1 = 63
 
-    def rank(self) -> int:
-        return 7 - (self // 8)
+    def rank(self) -> int:  # chess-lingo for row
+        return self // 8
 
-    def file(self) -> int:
+    def file(self) -> int:  # chess-lingo for column
         return self % 8
+
+    @staticmethod
+    def from_file_and_rank(file: int, rank: int) -> "Square":
+        return Square((8 * rank) + file)
 
 
 class PieceType(IntEnum):
