@@ -99,12 +99,6 @@ class Board:
 
         return children
 
-    def get_bishop_moves(self, square: Square) -> List["Board"]:
-        return []  # TODO
-
-    def get_queen_moves(self, square: Square) -> List["Board"]:
-        return []  # TODO
-
     def get_pawn_moves(self, square: Square) -> List["Board"]:
         return []  # TODO
 
@@ -249,4 +243,24 @@ class Board:
             + self.get_range_moves_one_direction(square, 0, -1)
             + self.get_range_moves_one_direction(square, 0, 1)
             + self.get_range_moves_one_direction(square, 1, 0)
+        )
+
+    def get_bishop_moves(self, square: Square) -> List["Board"]:
+        return (
+            self.get_range_moves_one_direction(square, -1, -1)
+            + self.get_range_moves_one_direction(square, -1, 1)
+            + self.get_range_moves_one_direction(square, 1, -1)
+            + self.get_range_moves_one_direction(square, 1, 1)
+        )
+
+    def get_queen_moves(self, square: Square) -> List["Board"]:
+        return (
+            self.get_range_moves_one_direction(square, -1, -1)
+            + self.get_range_moves_one_direction(square, -1, 0)
+            + self.get_range_moves_one_direction(square, -1, 1)
+            + self.get_range_moves_one_direction(square, 0, -1)
+            + self.get_range_moves_one_direction(square, 0, 1)
+            + self.get_range_moves_one_direction(square, 1, -1)
+            + self.get_range_moves_one_direction(square, 1, 0)
+            + self.get_range_moves_one_direction(square, 1, 1)
         )

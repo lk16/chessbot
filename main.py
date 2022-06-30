@@ -6,7 +6,7 @@ from chessbot.enums import PieceType, Square
 
 def main() -> None:
     board = Board.empty()
-    board.fields[Square.G3] = PieceType.WHITE_ROOK
+    board.fields[Square.G3] = PieceType.WHITE_QUEEN
 
     children = board.get_moves()
 
