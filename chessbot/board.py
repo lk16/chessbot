@@ -58,7 +58,42 @@ class Board:
         return squares
 
     def get_knight_moves(self, square: Square) -> List["Board"]:
-        return []  # TODO
+        # values are x,y
+        # where positive x to the right
+        # and positive y means down
+        knight_deltas = [
+            (-2, -1),
+            (-2, 1),
+            (-1, -2),
+            (-1, 2),
+            (1, -2),
+            (1, 2),
+            (2, -1),
+            (2, 1),
+        ]
+
+        rank = square.rank()
+        file = square.file()
+
+        children: List["Board"] = []
+
+        for dx, dy in knight_deltas:
+            move_x = file + dx
+            move_y = rank + dy
+
+            if move_x < 0 or move_x > 7 or move_y < 0 or move_y > 7:
+                # we're walking off the board
+                continue
+
+            move_square = Square.from_file_and_rank(move_x, move_y)
+
+            child = self.copy()
+            child.fields[move_square] = child.fields[square]
+            child.fields[square] = PieceType.EMPTY
+
+            children.append(child)
+
+        return children
 
     def get_rook_moves(self, square: Square) -> List["Board"]:
         return []  # TODO
@@ -115,7 +150,7 @@ class Board:
         # values are x,y
         # where positive x to the right
         # and positive y means down
-        deltas = [
+        king_deltas = [
             (-1, -1),  # left top
             (-1, 0),  # left
             (-1, 1),  # left down
@@ -131,7 +166,7 @@ class Board:
 
         children: List["Board"] = []
 
-        for dx, dy in deltas:
+        for dx, dy in king_deltas:
             move_x = file + dx
             move_y = rank + dy
 
