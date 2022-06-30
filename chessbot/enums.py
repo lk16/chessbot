@@ -68,7 +68,7 @@ class Square(IntEnum):
     H1 = 63
 
     def rank(self) -> int:
-        return 8 - (self // 8)
+        return 7 - (self // 8)
 
     def file(self) -> int:
         return self % 8
