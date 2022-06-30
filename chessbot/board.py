@@ -99,9 +99,6 @@ class Board:
 
         return children
 
-    def get_rook_moves(self, square: Square) -> List["Board"]:
-        return []  # TODO
-
     def get_bishop_moves(self, square: Square) -> List["Board"]:
         return []  # TODO
 
@@ -191,3 +188,65 @@ class Board:
             children.append(child)
 
         return children
+
+    def get_range_moves_one_direction(
+        self,
+        square: Square,
+        dx: int,
+        dy: int,
+    ) -> List["Board"]:
+        rank = square.rank()
+        file = square.file()
+
+        if dx > 0:
+            max_dx = 7 - file
+        elif dx < 0:
+            max_dx = file
+        else:
+            max_dx = 8
+
+        if dy > 0:
+            max_dy = 7 - rank
+        elif dy < 0:
+            max_dy = rank
+        else:
+            max_dy = 8
+
+        max_distance = min(max_dx, max_dy)
+
+        children: List["Board"] = []
+
+        for distance in range(1, max_distance + 1):
+            move_file = file + (dx * distance)
+            move_rank = rank + (dy * distance)
+
+            move_square = Square.from_file_and_rank(move_file, move_rank)
+
+            target_piece_color: Color = self.fields[move_square].get_color()
+
+            if target_piece_color == self.turn:
+                # we cannot take our own piece
+                break
+
+            # target square is empty or has opponent piece
+
+            child = self.copy()
+            child.fields[move_square] = child.fields[square]
+            child.fields[square] = PieceType.EMPTY
+
+            children.append(child)
+
+            if target_piece_color == self.turn.opponent():
+                # we captured a piece from the opponent
+                # meaning we cannot move further in same direction
+                break
+
+        return children
+
+    def get_rook_moves(self, square: Square) -> List["Board"]:
+        return (
+            self.get_range_moves_one_direction(square, -1, 0)
+            + self.get_range_moves_one_direction(square, 0, -1)
+            + self.get_range_moves_one_direction(square, 0, 1)
+            + self.get_range_moves_one_direction(square, 1, 0)
+        )

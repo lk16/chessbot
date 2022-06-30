@@ -107,3 +107,12 @@ class Color(IntEnum):
     BLACK = 0
     WHITE = 1
     NOBODY = 2
+
+    def opponent(self) -> "Color":
+        if self == Color.NOBODY:
+            raise ValueError("Cannot take opponent of NOBODY.")
+
+        if self == Color.WHITE:
+            return Color.BLACK
+
+        return Color.WHITE
