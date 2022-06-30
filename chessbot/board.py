@@ -7,36 +7,42 @@ from chessbot.enums import Color, PieceType, Square
 
 class Board:
     def __init__(self) -> None:
-        self.fields = [PieceType.EMPTY] * 64
-
-        self.fields[Square.A8] = PieceType.BLACK_ROOK
-        self.fields[Square.H8] = PieceType.BLACK_ROOK
-        self.fields[Square.B8] = PieceType.BLACK_KNIGHT
-        self.fields[Square.G8] = PieceType.BLACK_KNIGHT
-        self.fields[Square.C8] = PieceType.BLACK_BISHOP
-        self.fields[Square.F8] = PieceType.BLACK_BISHOP
-        self.fields[Square.D8] = PieceType.BLACK_QUEEN
-        self.fields[Square.E8] = PieceType.BLACK_KING
-
-        for square in range(Square.A7, Square.A6):
-            self.fields[square] = PieceType.BLACK_PAWN
-
-        self.fields[Square.A1] = PieceType.WHITE_ROOK
-        self.fields[Square.H1] = PieceType.WHITE_ROOK
-        self.fields[Square.B1] = PieceType.WHITE_KNIGHT
-        self.fields[Square.G1] = PieceType.WHITE_KNIGHT
-        self.fields[Square.C1] = PieceType.WHITE_BISHOP
-        self.fields[Square.F1] = PieceType.WHITE_BISHOP
-        self.fields[Square.D1] = PieceType.WHITE_QUEEN
-        self.fields[Square.E1] = PieceType.WHITE_KING
-
-        for square in range(Square.A2, Square.A1):
-            self.fields[square] = PieceType.WHITE_PAWN
-
+        self.fields: List[PieceType] = [PieceType.EMPTY] * 64
         self.turn = Color.WHITE
 
-        # TODO add castling
-        # TODO add en passant
+    @staticmethod
+    def empty() -> "Board":
+        return Board()
+
+    @staticmethod
+    def start() -> "Board":
+        board = Board.empty()
+
+        board.fields[Square.A8] = PieceType.BLACK_ROOK
+        board.fields[Square.H8] = PieceType.BLACK_ROOK
+        board.fields[Square.B8] = PieceType.BLACK_KNIGHT
+        board.fields[Square.G8] = PieceType.BLACK_KNIGHT
+        board.fields[Square.C8] = PieceType.BLACK_BISHOP
+        board.fields[Square.F8] = PieceType.BLACK_BISHOP
+        board.fields[Square.D8] = PieceType.BLACK_QUEEN
+        board.fields[Square.E8] = PieceType.BLACK_KING
+
+        for square in range(Square.A7, Square.A6):
+            board.fields[square] = PieceType.BLACK_PAWN
+
+        board.fields[Square.A1] = PieceType.WHITE_ROOK
+        board.fields[Square.H1] = PieceType.WHITE_ROOK
+        board.fields[Square.B1] = PieceType.WHITE_KNIGHT
+        board.fields[Square.G1] = PieceType.WHITE_KNIGHT
+        board.fields[Square.C1] = PieceType.WHITE_BISHOP
+        board.fields[Square.F1] = PieceType.WHITE_BISHOP
+        board.fields[Square.D1] = PieceType.WHITE_QUEEN
+        board.fields[Square.E1] = PieceType.WHITE_KING
+
+        for square in range(Square.A2, Square.A1):
+            board.fields[square] = PieceType.WHITE_PAWN
+
+        return board
 
     def copy(self) -> "Board":
         return deepcopy(self)
@@ -51,53 +57,59 @@ class Board:
                 squares.append(Square(square))
         return squares
 
-    def get_white_pawn_moves(self, pawn_square: Square) -> List["Board"]:
-        moves: List[Board] = []
+    def get_king_moves(self, square: Square) -> List["Board"]:
+        return []  # TODO
 
-        pawn_rank = pawn_square.rank()
+    def get_knight_moves(self, square: Square) -> List["Board"]:
+        return []  # TODO
 
-        if pawn_rank < 7:
-            # move forward
-            if self.fields[pawn_square - 8] == PieceType.EMPTY:
-                move = self.copy()
-                move.fields[pawn_square] = PieceType.EMPTY
-                move.fields[pawn_square - 8] = PieceType.WHITE_PAWN
-                moves.append(move)
+    def get_rook_moves(self, square: Square) -> List["Board"]:
+        return []  # TODO
 
-            # move 2 forward from start rank
-            if pawn_rank == 2:
-                if (
-                    self.fields[pawn_square - 8] == PieceType.EMPTY
-                    and self.fields[pawn_square - 16] == PieceType.EMPTY
-                ):
-                    move = self.copy()
-                    move.fields[pawn_square] = PieceType.EMPTY
-                    move.fields[pawn_square - 16] = PieceType.WHITE_PAWN
-                    moves.append(move)
+    def get_bishop_moves(self, square: Square) -> List["Board"]:
+        return []  # TODO
 
-            # TODO capture en passent
+    def get_queen_moves(self, square: Square) -> List["Board"]:
+        return []  # TODO
 
-        elif pawn_rank == 7:
-            # TODO promote
-            pass
+    def get_pawn_moves(self, square: Square) -> List["Board"]:
+        return []  # TODO
 
-        # TODO regular capture
-
-        return moves
-
-    def get_children(self) -> List["Board"]:
+    def get_moves(self) -> List["Board"]:
         moves: List["Board"] = []
 
         if self.turn == Color.WHITE:
-            white_pawn_squares = self.find_pieces(PieceType.WHITE_PAWN)
-
-            for white_pawn_square in white_pawn_squares:
-                moves += self.get_white_pawn_moves(white_pawn_square)
-
-            # TODO compute moves for other white pieces
-
+            king_squares = self.find_pieces(PieceType.WHITE_KING)
+            knight_squares = self.find_pieces(PieceType.WHITE_KNIGHT)
+            rook_squares = self.find_pieces(PieceType.WHITE_ROOK)
+            bishop_squares = self.find_pieces(PieceType.WHITE_BISHOP)
+            queen_squares = self.find_pieces(PieceType.WHITE_QUEEN)
+            pawn_squares = self.find_pieces(PieceType.WHITE_PAWN)
         else:
-            # TODO compute moves for black pieces
-            pass
+            assert self.turn == Color.BLACK
+            king_squares = self.find_pieces(PieceType.BLACK_KING)
+            knight_squares = self.find_pieces(PieceType.BLACK_KNIGHT)
+            rook_squares = self.find_pieces(PieceType.BLACK_ROOK)
+            bishop_squares = self.find_pieces(PieceType.BLACK_BISHOP)
+            queen_squares = self.find_pieces(PieceType.BLACK_QUEEN)
+            pawn_squares = self.find_pieces(PieceType.BLACK_PAWN)
+
+        for king_square in king_squares:
+            moves += self.get_king_moves(king_square)
+
+        for knight_square in knight_squares:
+            moves += self.get_knight_moves(knight_square)
+
+        for rook_square in rook_squares:
+            moves += self.get_rook_moves(rook_square)
+
+        for bishop_square in bishop_squares:
+            moves += self.get_bishop_moves(bishop_square)
+
+        for queen_square in queen_squares:
+            moves += self.get_queen_moves(queen_square)
+
+        for pawn_square in pawn_squares:
+            moves += self.get_pawn_moves(pawn_square)
 
         return moves
