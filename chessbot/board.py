@@ -3,6 +3,30 @@ from typing import Any, List
 
 from chessbot.board_printer import print_board
 from chessbot.enums import Color, PieceType, Square
+from chessbot.exceptions import InvalidSquareException
+
+KNIGHT_DELTAS = [
+    (-2, -1),
+    (-2, 1),
+    (-1, -2),
+    (-1, 2),
+    (1, -2),
+    (1, 2),
+    (2, -1),
+    (2, 1),
+]
+
+
+KING_DELTAS = [
+    (-1, -1),
+    (-1, 0),
+    (-1, 1),
+    (0, -1),
+    (0, 1),
+    (1, -1),
+    (1, 0),
+    (1, 1),
+]
 
 
 class Board:
@@ -44,8 +68,11 @@ class Board:
 
         return board
 
-    def copy(self) -> "Board":
-        return deepcopy(self)
+    def move_piece(self, from_: Square, to: Square) -> "Board":
+        child = deepcopy(self)
+        child.fields[to] = child.fields[from_]
+        child.fields[from_] = PieceType.EMPTY
+        return child
 
     def show(self, *args: Any, **kwargs: Any) -> None:
         print_board(self, *args, **kwargs)
@@ -58,126 +85,48 @@ class Board:
         return squares
 
     def get_knight_moves(self, square: Square) -> List["Board"]:
-        # values are x,y
-        # where positive x to the right
-        # and positive y means down
-        knight_deltas = [
-            (-2, -1),
-            (-2, 1),
-            (-1, -2),
-            (-1, 2),
-            (1, -2),
-            (1, 2),
-            (2, -1),
-            (2, 1),
-        ]
-
         x, y = square.get_xy()
 
         children: List["Board"] = []
 
-        for dx, dy in knight_deltas:
+        for dx, dy in KNIGHT_DELTAS:
             move_x = x + dx
             move_y = y + dy
 
-            if move_x < 0 or move_x > 7 or move_y < 0 or move_y > 7:
+            try:
+                move_square = Square.from_xy(move_x, move_y)
+            except InvalidSquareException:
                 # we're walking off the board
                 continue
-
-            move_square = Square.from_xy(move_x, move_y)
 
             if self.fields[move_square].get_color() == self.turn:
                 # we're about to capture our own piece
                 continue
 
-            child = self.copy()
-            child.fields[move_square] = child.fields[square]
-            child.fields[square] = PieceType.EMPTY
-
-            children.append(child)
+            children.append(self.move_piece(square, move_square))
 
         return children
 
-    def get_pawn_moves(self, square: Square) -> List["Board"]:
-        return []  # TODO
-
-    def get_moves(self) -> List["Board"]:
-        moves: List["Board"] = []
-
-        if self.turn == Color.WHITE:
-            king_squares = self.find_pieces(PieceType.WHITE_KING)
-            knight_squares = self.find_pieces(PieceType.WHITE_KNIGHT)
-            rook_squares = self.find_pieces(PieceType.WHITE_ROOK)
-            bishop_squares = self.find_pieces(PieceType.WHITE_BISHOP)
-            queen_squares = self.find_pieces(PieceType.WHITE_QUEEN)
-            pawn_squares = self.find_pieces(PieceType.WHITE_PAWN)
-        else:
-            assert self.turn == Color.BLACK
-            king_squares = self.find_pieces(PieceType.BLACK_KING)
-            knight_squares = self.find_pieces(PieceType.BLACK_KNIGHT)
-            rook_squares = self.find_pieces(PieceType.BLACK_ROOK)
-            bishop_squares = self.find_pieces(PieceType.BLACK_BISHOP)
-            queen_squares = self.find_pieces(PieceType.BLACK_QUEEN)
-            pawn_squares = self.find_pieces(PieceType.BLACK_PAWN)
-
-        for king_square in king_squares:
-            moves += self.get_king_moves(king_square)
-
-        for knight_square in knight_squares:
-            moves += self.get_knight_moves(knight_square)
-
-        for rook_square in rook_squares:
-            moves += self.get_rook_moves(rook_square)
-
-        for bishop_square in bishop_squares:
-            moves += self.get_bishop_moves(bishop_square)
-
-        for queen_square in queen_squares:
-            moves += self.get_queen_moves(queen_square)
-
-        for pawn_square in pawn_squares:
-            moves += self.get_pawn_moves(pawn_square)
-
-        return moves
-
     def get_king_moves(self, square: Square) -> List["Board"]:
-        # values are x,y
-        # where positive x to the right
-        # and positive y means down
-        king_deltas = [
-            (-1, -1),  # left top
-            (-1, 0),  # left
-            (-1, 1),  # left down
-            (0, -1),  # up
-            (0, 1),  # down
-            (1, -1),  # right top
-            (1, 0),  # right
-            (1, 1),  # right down
-        ]
-
         x, y = square.get_xy()
 
         children: List["Board"] = []
 
-        for dx, dy in king_deltas:
+        for dx, dy in KING_DELTAS:
             move_x = x + dx
             move_y = y + dy
 
-            if move_x < 0 or move_x > 7 or move_y < 0 or move_y > 7:
+            try:
+                move_square = Square.from_xy(move_x, move_y)
+            except InvalidSquareException:
                 # we're walking off the board
                 continue
-
-            move_square = Square.from_xy(move_x, move_y)
 
             if self.fields[move_square].get_color() == self.turn:
                 # we're about to capture our own piece
                 continue
 
-            child = self.copy()
-            child.fields[move_square] = child.fields[square]
-            child.fields[square] = PieceType.EMPTY
-
-            children.append(child)
+            children.append(self.move_piece(square, move_square))
 
         return children
 
@@ -221,11 +170,7 @@ class Board:
 
             # target square is empty or has opponent piece
 
-            child = self.copy()
-            child.fields[move_square] = child.fields[square]
-            child.fields[square] = PieceType.EMPTY
-
-            children.append(child)
+            children.append(self.move_piece(square, move_square))
 
             if target_piece_color == self.turn.opponent():
                 # we captured a piece from the opponent
@@ -261,3 +206,45 @@ class Board:
             + self.get_range_moves_one_direction(square, 1, 0)
             + self.get_range_moves_one_direction(square, 1, 1)
         )
+
+    def get_pawn_moves(self, square: Square) -> List["Board"]:
+        return []  # TODO
+
+    def get_moves(self) -> List["Board"]:
+        moves: List["Board"] = []
+
+        if self.turn == Color.WHITE:
+            king_squares = self.find_pieces(PieceType.WHITE_KING)
+            knight_squares = self.find_pieces(PieceType.WHITE_KNIGHT)
+            rook_squares = self.find_pieces(PieceType.WHITE_ROOK)
+            bishop_squares = self.find_pieces(PieceType.WHITE_BISHOP)
+            queen_squares = self.find_pieces(PieceType.WHITE_QUEEN)
+            pawn_squares = self.find_pieces(PieceType.WHITE_PAWN)
+        else:
+            assert self.turn == Color.BLACK
+            king_squares = self.find_pieces(PieceType.BLACK_KING)
+            knight_squares = self.find_pieces(PieceType.BLACK_KNIGHT)
+            rook_squares = self.find_pieces(PieceType.BLACK_ROOK)
+            bishop_squares = self.find_pieces(PieceType.BLACK_BISHOP)
+            queen_squares = self.find_pieces(PieceType.BLACK_QUEEN)
+            pawn_squares = self.find_pieces(PieceType.BLACK_PAWN)
+
+        for king_square in king_squares:
+            moves += self.get_king_moves(king_square)
+
+        for knight_square in knight_squares:
+            moves += self.get_knight_moves(knight_square)
+
+        for rook_square in rook_squares:
+            moves += self.get_rook_moves(rook_square)
+
+        for bishop_square in bishop_squares:
+            moves += self.get_bishop_moves(bishop_square)
+
+        for queen_square in queen_squares:
+            moves += self.get_queen_moves(queen_square)
+
+        for pawn_square in pawn_squares:
+            moves += self.get_pawn_moves(pawn_square)
+
+        return moves

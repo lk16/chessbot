@@ -1,6 +1,8 @@
 from enum import IntEnum
 from typing import Tuple
 
+from chessbot.exceptions import InvalidSquareException
+
 
 class Square(IntEnum):
     A8 = 0
@@ -69,12 +71,15 @@ class Square(IntEnum):
     H1 = 63
 
     def get_xy(self) -> Tuple[int, int]:
-        x = self % 8
-        y = self // 8
+        x = self % 8  # column, x == 0 being the left most column == file a
+        y = self // 8  # row, y == 0 being the top most row == rank 8
         return x, y
 
     @staticmethod
     def from_xy(x: int, y: int) -> "Square":
+        if x not in range(8) or y not in range(8):
+            raise InvalidSquareException
+
         return Square(8 * y + x)
 
 
