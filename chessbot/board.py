@@ -2,31 +2,15 @@ from copy import deepcopy
 from typing import Any, List
 
 from chessbot.board_printer import print_board
+from chessbot.constants import (
+    BISHOP_DIRECTIONS,
+    KING_DELTAS,
+    KNIGHT_DELTAS,
+    QUEEN_DIRECTIONS,
+    ROOK_DIRECTIONS,
+)
 from chessbot.enums import Color, PieceType, Square
 from chessbot.exceptions import InvalidSquareException
-
-KNIGHT_DELTAS = [
-    (-2, -1),
-    (-2, 1),
-    (-1, -2),
-    (-1, 2),
-    (1, -2),
-    (1, 2),
-    (2, -1),
-    (2, 1),
-]
-
-
-KING_DELTAS = [
-    (-1, -1),
-    (-1, 0),
-    (-1, 1),
-    (0, -1),
-    (0, 1),
-    (1, -1),
-    (1, 0),
-    (1, 1),
-]
 
 
 class Board:
@@ -74,6 +58,9 @@ class Board:
         child.fields[from_] = PieceType.EMPTY
         return child
 
+    def get_piece_color(self, square: Square) -> Color:
+        return self.fields[square].get_color()
+
     def show(self, *args: Any, **kwargs: Any) -> None:
         print_board(self, *args, **kwargs)
 
@@ -99,7 +86,7 @@ class Board:
                 # we're walking off the board
                 continue
 
-            if self.fields[move_square].get_color() == self.turn:
+            if self.get_piece_color(move_square) == self.turn:
                 # we're about to capture our own piece
                 continue
 
@@ -122,7 +109,7 @@ class Board:
                 # we're walking off the board
                 continue
 
-            if self.fields[move_square].get_color() == self.turn:
+            if self.get_piece_color(move_square) == self.turn:
                 # we're about to capture our own piece
                 continue
 
@@ -162,7 +149,7 @@ class Board:
 
             move_square = Square.from_xy(move_x, move_y)
 
-            target_piece_color: Color = self.fields[move_square].get_color()
+            target_piece_color = self.get_piece_color(move_square)
 
             if target_piece_color == self.turn:
                 # we cannot take our own piece
@@ -180,32 +167,22 @@ class Board:
         return children
 
     def get_rook_moves(self, square: Square) -> List["Board"]:
-        return (
-            self.get_range_moves_one_direction(square, -1, 0)
-            + self.get_range_moves_one_direction(square, 0, -1)
-            + self.get_range_moves_one_direction(square, 0, 1)
-            + self.get_range_moves_one_direction(square, 1, 0)
-        )
+        children: List["Board"] = []
+        for dx, dy in ROOK_DIRECTIONS:
+            children += self.get_range_moves_one_direction(square, dx, dy)
+        return children
 
     def get_bishop_moves(self, square: Square) -> List["Board"]:
-        return (
-            self.get_range_moves_one_direction(square, -1, -1)
-            + self.get_range_moves_one_direction(square, -1, 1)
-            + self.get_range_moves_one_direction(square, 1, -1)
-            + self.get_range_moves_one_direction(square, 1, 1)
-        )
+        children: List["Board"] = []
+        for dx, dy in BISHOP_DIRECTIONS:
+            children += self.get_range_moves_one_direction(square, dx, dy)
+        return children
 
     def get_queen_moves(self, square: Square) -> List["Board"]:
-        return (
-            self.get_range_moves_one_direction(square, -1, -1)
-            + self.get_range_moves_one_direction(square, -1, 0)
-            + self.get_range_moves_one_direction(square, -1, 1)
-            + self.get_range_moves_one_direction(square, 0, -1)
-            + self.get_range_moves_one_direction(square, 0, 1)
-            + self.get_range_moves_one_direction(square, 1, -1)
-            + self.get_range_moves_one_direction(square, 1, 0)
-            + self.get_range_moves_one_direction(square, 1, 1)
-        )
+        children: List["Board"] = []
+        for dx, dy in QUEEN_DIRECTIONS:
+            children += self.get_range_moves_one_direction(square, dx, dy)
+        return children
 
     def get_pawn_moves(self, square: Square) -> List["Board"]:
         return []  # TODO
