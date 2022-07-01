@@ -72,20 +72,19 @@ class Board:
             (2, 1),
         ]
 
-        rank = square.rank()
-        file = square.file()
+        x, y = square.get_xy()
 
         children: List["Board"] = []
 
         for dx, dy in knight_deltas:
-            move_x = file + dx
-            move_y = rank + dy
+            move_x = x + dx
+            move_y = y + dy
 
             if move_x < 0 or move_x > 7 or move_y < 0 or move_y > 7:
                 # we're walking off the board
                 continue
 
-            move_square = Square.from_file_and_rank(move_x, move_y)
+            move_square = Square.from_xy(move_x, move_y)
 
             if self.fields[move_square].get_color() == self.turn:
                 # we're about to capture our own piece
@@ -156,20 +155,19 @@ class Board:
             (1, 1),  # right down
         ]
 
-        rank = square.rank()
-        file = square.file()
+        x, y = square.get_xy()
 
         children: List["Board"] = []
 
         for dx, dy in king_deltas:
-            move_x = file + dx
-            move_y = rank + dy
+            move_x = x + dx
+            move_y = y + dy
 
             if move_x < 0 or move_x > 7 or move_y < 0 or move_y > 7:
                 # we're walking off the board
                 continue
 
-            move_square = Square.from_file_and_rank(move_x, move_y)
+            move_square = Square.from_xy(move_x, move_y)
 
             if self.fields[move_square].get_color() == self.turn:
                 # we're about to capture our own piece
@@ -189,20 +187,19 @@ class Board:
         dx: int,
         dy: int,
     ) -> List["Board"]:
-        rank = square.rank()
-        file = square.file()
+        x, y = square.get_xy()
 
         if dx > 0:
-            max_dx = 7 - file
+            max_dx = 7 - x
         elif dx < 0:
-            max_dx = file
+            max_dx = x
         else:
             max_dx = 8
 
         if dy > 0:
-            max_dy = 7 - rank
+            max_dy = 7 - y
         elif dy < 0:
-            max_dy = rank
+            max_dy = y
         else:
             max_dy = 8
 
@@ -211,10 +208,10 @@ class Board:
         children: List["Board"] = []
 
         for distance in range(1, max_distance + 1):
-            move_file = file + (dx * distance)
-            move_rank = rank + (dy * distance)
+            move_x = x + (dx * distance)
+            move_y = y + (dy * distance)
 
-            move_square = Square.from_file_and_rank(move_file, move_rank)
+            move_square = Square.from_xy(move_x, move_y)
 
             target_piece_color: Color = self.fields[move_square].get_color()
 

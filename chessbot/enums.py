@@ -1,4 +1,5 @@
 from enum import IntEnum
+from typing import Tuple
 
 
 class Square(IntEnum):
@@ -67,15 +68,14 @@ class Square(IntEnum):
     G1 = 62
     H1 = 63
 
-    def rank(self) -> int:  # chess-lingo for row
-        return self // 8
-
-    def file(self) -> int:  # chess-lingo for column
-        return self % 8
+    def get_xy(self) -> Tuple[int, int]:
+        x = self % 8
+        y = self // 8
+        return x, y
 
     @staticmethod
-    def from_file_and_rank(file: int, rank: int) -> "Square":
-        return Square((8 * rank) + file)
+    def from_xy(x: int, y: int) -> "Square":
+        return Square(8 * y + x)
 
 
 class PieceType(IntEnum):
