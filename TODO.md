@@ -16,14 +16,9 @@ Things to consider
 # Links
 - [Chess unicode symbols](https://en.wikipedia.org/wiki/Chess_symbols_in_Unicode)
 - [Chessboard editor](https://lichess.org/editor)
-
+- [Chess opening tree sizes](https://www.chessprogramming.org/Perft_Results)
 
 # This stream
-- compute moves for king
-- compute moves for knight
-- compute moves for rook
-- compute moves for bishop
-- compute moves for queen
 - compute moves for pawn (moving forard / capturing)
 - compute pawn promotion
 - compute castling moves
@@ -31,5 +26,6 @@ Things to consider
 - compute if player-to-move is checked
 - compute if player-to-move is checkmated
 - forbid moves that put player-to-move in check
+- confirm opening tree sizes
 - load board from FEN
 - export board as FEN (print link to lichess editor)
