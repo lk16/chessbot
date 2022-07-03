@@ -68,3 +68,18 @@ BISHOP_DIRECTIONS = [
 
 
 QUEEN_DIRECTIONS = ROOK_DIRECTIONS + BISHOP_DIRECTIONS
+
+PROMOTION_PIECE_TYPES = [
+    [
+        PieceType.BLACK_KNIGHT,
+        PieceType.BLACK_BISHOP,
+        PieceType.BLACK_QUEEN,
+        PieceType.BLACK_ROOK,
+    ],
+    [
+        PieceType.WHITE_KNIGHT,
+        PieceType.WHITE_BISHOP,
+        PieceType.WHITE_QUEEN,
+        PieceType.WHITE_ROOK,
+    ],
+]
