@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
 from chessbot.board import Board
-from chessbot.enums import PieceType, Square
+from chessbot.enums import Color, PieceType, Square
 
 
 def main() -> None:
-    board = Board.empty()
-    board.fields[Square.G3] = PieceType.WHITE_QUEEN
+    fields = 64 * [PieceType.EMPTY]
+    fields[Square.G3] = PieceType.WHITE_QUEEN
+
+    board = Board(turn=Color.WHITE, fields=fields)
 
     children = board.get_moves()
 

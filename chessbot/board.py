@@ -1,9 +1,9 @@
-from copy import deepcopy
-from typing import Any, List
+from typing import Any, Final, Iterable, List, Tuple
 
 from chessbot.board_printer import print_board
 from chessbot.constants import (
     BISHOP_DIRECTIONS,
+    BOARD_START_FIELDS,
     KING_DELTAS,
     KNIGHT_DELTAS,
     QUEEN_DIRECTIONS,
@@ -14,49 +14,47 @@ from chessbot.exceptions import InvalidSquareException
 
 
 class Board:
-    def __init__(self) -> None:
-        self.fields: List[PieceType] = [PieceType.EMPTY] * 64
-        self.turn = Color.WHITE
+    def __init__(self, turn: Color, fields: Iterable[PieceType]) -> None:
+        self.fields: Final[Tuple[PieceType, ...]] = tuple(fields)
+        self.turn: Final[Color] = turn
+
+        self.validate()
+
+    def validate(self) -> None:
+        assert self.turn != Color.NOBODY
+        assert len(self.fields) == 64
 
     @staticmethod
     def empty() -> "Board":
-        return Board()
+        empty_fields = [PieceType.EMPTY] * 64
+        return Board(turn=Color.WHITE, fields=empty_fields)
 
     @staticmethod
     def start() -> "Board":
-        board = Board.empty()
+        return Board(turn=Color.WHITE, fields=BOARD_START_FIELDS)
 
-        board.fields[Square.A8] = PieceType.BLACK_ROOK
-        board.fields[Square.H8] = PieceType.BLACK_ROOK
-        board.fields[Square.B8] = PieceType.BLACK_KNIGHT
-        board.fields[Square.G8] = PieceType.BLACK_KNIGHT
-        board.fields[Square.C8] = PieceType.BLACK_BISHOP
-        board.fields[Square.F8] = PieceType.BLACK_BISHOP
-        board.fields[Square.D8] = PieceType.BLACK_QUEEN
-        board.fields[Square.E8] = PieceType.BLACK_KING
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Board):
+            return False
 
-        for square in range(Square.A7, Square.A6):
-            board.fields[square] = PieceType.BLACK_PAWN
+        return all(
+            [
+                self.turn == other.turn,
+                self.fields == other.fields,
+            ]
+        )
 
-        board.fields[Square.A1] = PieceType.WHITE_ROOK
-        board.fields[Square.H1] = PieceType.WHITE_ROOK
-        board.fields[Square.B1] = PieceType.WHITE_KNIGHT
-        board.fields[Square.G1] = PieceType.WHITE_KNIGHT
-        board.fields[Square.C1] = PieceType.WHITE_BISHOP
-        board.fields[Square.F1] = PieceType.WHITE_BISHOP
-        board.fields[Square.D1] = PieceType.WHITE_QUEEN
-        board.fields[Square.E1] = PieceType.WHITE_KING
-
-        for square in range(Square.A2, Square.A1):
-            board.fields[square] = PieceType.WHITE_PAWN
-
-        return board
+    def __hash__(self) -> int:
+        return hash((self.fields, self.turn))
 
     def move_piece(self, from_: Square, to: Square) -> "Board":
-        child = deepcopy(self)
-        child.fields[to] = child.fields[from_]
-        child.fields[from_] = PieceType.EMPTY
-        return child
+        # NOTE: copying into a list allows modification
+        # self.fields won't (and can't) be changed
+        fields = list(self.fields)
+
+        fields[to] = fields[from_]
+        fields[from_] = PieceType.EMPTY
+        return Board(turn=self.turn.opponent(), fields=fields)
 
     def get_piece_color(self, square: Square) -> Color:
         return self.fields[square].get_color()
