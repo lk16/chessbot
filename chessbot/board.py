@@ -4,8 +4,12 @@ from chessbot.board_printer import print_board
 from chessbot.constants import (
     BISHOP_DIRECTIONS,
     BOARD_START_FIELDS,
+    EN_PASSENT_CAPTURER_Y,
     KING_DELTAS,
     KNIGHT_DELTAS,
+    PAWN_DELTA_Y,
+    PAWN_START_Y,
+    PRE_PROMOTION_Y,
     PROMOTION_PIECE_TYPES,
     QUEEN_DIRECTIONS,
     ROOK_DIRECTIONS,
@@ -74,6 +78,12 @@ class Board:
             fields=fields,
             en_passent_column=en_passent_column,
         )
+
+    def promote(self, from_: Square, to: Square, piece_type: PieceType) -> "Board":
+        fields = list(self.fields)
+        fields[from_] = PieceType.EMPTY
+        fields[to] = piece_type
+        return Board(turn=self.turn.opponent(), fields=fields)
 
     def get_piece_color(self, square: Square) -> Color:
         return self.fields[square].get_color()
@@ -207,12 +217,14 @@ class Board:
         capture_squares: List[Square] = []
         moves: List["Board"] = []
 
+        pawn_delta = PAWN_DELTA_Y[self.turn]
+
         if x != 0:
-            left_capture_square = Square.from_xy(x - 1, y - 1)
+            left_capture_square = Square.from_xy(x - 1, y + pawn_delta)
             capture_squares.append(left_capture_square)
 
         if x != 7:
-            right_capture_square = Square.from_xy(x + 1, y - 1)
+            right_capture_square = Square.from_xy(x + 1, y + pawn_delta)
             capture_squares.append(right_capture_square)
 
         for capture_square in capture_squares:
@@ -223,66 +235,64 @@ class Board:
 
     def get_pawn_push_moves(self, square: Square) -> List["Board"]:
         """
-        Return moves of pawn moving forward without promoting
+        Return moves of pawn moving forward including promotion
         """
         x, y = square.get_xy()
-        forward = Square.from_xy(x, y - 1)
+
+        pawn_delta = PAWN_DELTA_Y[self.turn]
+        forward = Square.from_xy(x, y + pawn_delta)
+
+        start_y = PAWN_START_Y[self.turn]
+        pre_promotion_y = PRE_PROMOTION_Y[self.turn]
+
         moves: List["Board"] = []
 
-        if y >= 2 and y <= 6:
-            moves.append(self.move_piece(square, forward))
+        if self.get_piece_color(forward) == Color.NOBODY:
+            if y != pre_promotion_y:
+                moves.append(self.move_piece(square, forward))
 
-        if y == 6:
-            two_forward = Square.from_xy(x, y - 2)
+            if y == start_y:
+                two_forward = Square.from_xy(x, y + (2 * pawn_delta))
+                if self.get_piece_color(two_forward) == Color.NOBODY:
+                    moves.append(
+                        self.move_piece(square, two_forward, en_passent_column=x)
+                    )
 
-            if self.get_piece_color(two_forward) == Color.NOBODY:
-                moves.append(self.move_piece(square, two_forward, en_passent_column=x))
-
-        return moves
-
-    def get_pawn_promotion_moves(self, square: Square) -> List["Board"]:
-        x, y = square.get_xy()
-
-        if y != 1:
-            return []
-
-        forward = Square.from_xy(x, y - 1)
-        moves: List["Board"] = []
-
-        for piece_type in PROMOTION_PIECE_TYPES[self.turn]:
-            fields = list(self.fields)
-
-            fields[square] = PieceType.EMPTY
-            fields[forward] = piece_type
-
-            child = Board(turn=self.turn.opponent(), fields=fields)
-            moves.append(child)
+            if y == pre_promotion_y:
+                for piece_type in PROMOTION_PIECE_TYPES[self.turn]:
+                    moves.append(self.promote(square, forward, piece_type))
 
         return moves
 
     def get_pawn_en_passent_moves(self, square: Square) -> List["Board"]:
-        if self.en_passent_column is None:
-            # en passent not possible
-            return []
-
         x, y = square.get_xy()
 
-        if x != self.en_passent_column or y != 4:
-            # cannot take en passent with this pawn
+        if any(
+            [
+                self.en_passent_column is None,  # en passent not possible at all
+                x != self.en_passent_column,  # another pawn can take en passent
+                y
+                != EN_PASSENT_CAPTURER_Y[
+                    self.turn
+                ],  # cannot take en passent from this row
+            ]
+        ):
             return []
+
+        pawn_delta_y = PAWN_DELTA_Y[self.turn]
 
         move_squares: List[Square] = []
         moves: List["Board"] = []
 
         if x != 0:
-            left_move_square = Square.from_xy(x - 1, y - 1)
+            left_move_square = Square.from_xy(x - 1, y + pawn_delta_y)
             move_squares.append(left_move_square)
 
         if x != 7:
-            right_move_square = Square.from_xy(x + 1, y - 1)
+            right_move_square = Square.from_xy(x + 1, y + pawn_delta_y)
             move_squares.append(right_move_square)
 
-        en_passent_square = Square.from_xy(x, y - 1)
+        en_passent_square = Square.from_xy(x, y + pawn_delta_y)
 
         for move_square in move_squares:
             if self.get_piece_color(move_square) == Color.NOBODY:
@@ -297,22 +307,11 @@ class Board:
         return moves
 
     def get_pawn_moves(self, square: Square) -> List["Board"]:
-
-        # TODO: handle black pawn
-        assert self.get_piece_color(square) == Color.WHITE
-
-        x, y = square.get_xy()
-        forward = Square.from_xy(x, y - 1)
-        children: List["Board"] = []
-
-        if self.get_piece_color(forward) == Color.NOBODY:
-            children += self.get_pawn_push_moves(square)
-            children += self.get_pawn_promotion_moves(square)
-
-        children += self.get_pawn_capture_moves(square)
-        children += self.get_pawn_en_passent_moves(square)
-
-        return children
+        return (
+            self.get_pawn_push_moves(square)
+            + self.get_pawn_capture_moves(square)
+            + self.get_pawn_en_passent_moves(square)
+        )
 
     def get_castling_moves(self) -> List["Board"]:
         return []  # TODO

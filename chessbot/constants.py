@@ -70,16 +70,37 @@ BISHOP_DIRECTIONS = [
 QUEEN_DIRECTIONS = ROOK_DIRECTIONS + BISHOP_DIRECTIONS
 
 PROMOTION_PIECE_TYPES = [
-    [
+    [  # BLACK
         PieceType.BLACK_KNIGHT,
         PieceType.BLACK_BISHOP,
         PieceType.BLACK_QUEEN,
         PieceType.BLACK_ROOK,
     ],
-    [
+    [  # WHITE
         PieceType.WHITE_KNIGHT,
         PieceType.WHITE_BISHOP,
         PieceType.WHITE_QUEEN,
         PieceType.WHITE_ROOK,
     ],
+]
+
+PRE_PROMOTION_Y = [
+    6,  # BLACK
+    1,  # WHITE
+]
+
+
+PAWN_START_Y = [
+    1,  # BLACK
+    6,  # WHITE
+]
+
+PAWN_DELTA_Y = [
+    1,  # BLACK
+    -1,  # WHITE
+]
+
+EN_PASSENT_CAPTURER_Y = [
+    3,  # BLACK
+    4,  # WHITE
 ]

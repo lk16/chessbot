@@ -19,10 +19,7 @@ Things to consider
 - [Chess opening tree sizes](https://www.chessprogramming.org/Perft_Results)
 
 # This stream
-- compute moves for pawn (moving forard / capturing)
-- compute pawn promotion
 - compute castling moves
-- compute en-passant moves
 - compute if player-to-move is checked
 - compute if player-to-move is checkmated
 - forbid moves that put player-to-move in check

@@ -20,7 +20,7 @@ Every last commit after a stream ends gets a tag. That way progress can be seen 
 - Add moves for king, knight, rook, bishop and queen
 
 ## [stream-03](https://github.com/lk16/chessbot/tree/stream-03)
-...
+- Add all pawn moves, including promotion, capturing and "en passent"
 
 ## See also
 Future features and fixes can be found in the [TODO](./TODO.md) file.
