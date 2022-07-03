@@ -48,6 +48,12 @@ class Board:
         return hash((self.fields, self.turn))
 
     def move_piece(self, from_: Square, to: Square) -> "Board":
+        # we can't only move our own pieces
+        assert self.get_piece_color(from_) == self.turn
+
+        # we can't capture our own pieces
+        assert self.get_piece_color(to) != self.turn
+
         # NOTE: copying into a list allows modification
         # self.fields won't (and can't) be changed
         fields = list(self.fields)
@@ -185,6 +191,21 @@ class Board:
     def get_pawn_moves(self, square: Square) -> List["Board"]:
         return []  # TODO
 
+    def get_castling_moves(self) -> List["Board"]:
+        return []  # TODO
+
+    def is_checked(self) -> bool:
+        """
+        Returns whether the king of the player to move is under attack
+        """
+        return False  # TODO
+
+    def is_checkmate(self) -> bool:
+        """
+        Returns whether the king of the player to move is checkmated
+        """
+        return False  # TODO
+
     def get_moves(self) -> List["Board"]:
         moves: List["Board"] = []
 
@@ -221,5 +242,7 @@ class Board:
 
         for pawn_square in pawn_squares:
             moves += self.get_pawn_moves(pawn_square)
+
+        moves += self.get_castling_moves()
 
         return moves
