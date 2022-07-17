@@ -327,7 +327,109 @@ class Board:
         """
         Returns whether the king of the player to move is under attack
         """
-        return False  # TODO
+        if self.turn == Color.WHITE:
+            king_squares = self.find_pieces(PieceType.WHITE_KING)
+        else:
+            king_squares = self.find_pieces(PieceType.BLACK_KING)
+
+        assert len(king_squares) == 1
+        king_square = king_squares[0]
+
+        king_x, king_y = king_square.get_xy()
+
+        # checked by knight
+        for dx, dy in KNIGHT_DELTAS:
+            knight_x = king_x + dx
+            knight_y = king_y + dy
+
+            try:
+                knight_square = Square.from_xy(knight_x, knight_y)
+            except InvalidSquareException:
+                continue
+
+            if self.turn == Color.WHITE:
+                if self.fields[knight_square] == PieceType.BLACK_KNIGHT:
+                    return True
+            else:
+                if self.fields[knight_square] == PieceType.WHITE_KNIGHT:
+                    return True
+
+        # checked by rook/queen
+        for dx, dy in ROOK_DIRECTIONS:
+            for distance in range(1, 8):
+                piece_x = king_x + (dx * distance)
+                piece_y = king_y + (dy * distance)
+
+                try:
+                    piece_square = Square.from_xy(piece_x, piece_y)
+                except InvalidSquareException:
+                    break
+
+                piece_type = self.fields[piece_square]
+
+                if piece_type == PieceType.EMPTY:
+                    continue
+
+                if self.turn == Color.WHITE:
+                    if piece_type in [PieceType.BLACK_ROOK, PieceType.BLACK_QUEEN]:
+                        return True
+                    else:
+                        break
+                else:
+                    if piece_type in [PieceType.WHITE_ROOK, PieceType.WHITE_QUEEN]:
+                        return True
+                    else:
+                        break
+
+        # checked by bishop/queen
+        for dx, dy in BISHOP_DIRECTIONS:
+            for distance in range(1, 8):
+                piece_x = king_x + (dx * distance)
+                piece_y = king_y + (dy * distance)
+
+                try:
+                    piece_square = Square.from_xy(piece_x, piece_y)
+                except InvalidSquareException:
+                    break
+
+                piece_type = self.fields[piece_square]
+
+                if piece_type == PieceType.EMPTY:
+                    continue
+
+                if self.turn == Color.WHITE:
+                    if piece_type in [PieceType.BLACK_BISHOP, PieceType.BLACK_QUEEN]:
+                        return True
+                    else:
+                        break
+                else:
+                    if piece_type in [PieceType.WHITE_BISHOP, PieceType.WHITE_QUEEN]:
+                        return True
+                    else:
+                        break
+
+        # checked by pawn
+        pawn_squares: List[Square] = []
+        for dx in [-1, 1]:
+            pawn_x = king_x + dx
+            pawn_y = king_y - PAWN_DELTA_Y[self.turn.opponent()]
+
+            try:
+                pawn_square = Square.from_xy(pawn_x, pawn_y)
+            except InvalidSquareException:
+                continue
+
+            pawn_squares.append(pawn_square)
+
+        for pawn_square in pawn_squares:
+            if self.turn == Color.WHITE:
+                if self.fields[pawn_square] == PieceType.BLACK_PAWN:
+                    return True
+            else:
+                if self.fields[pawn_square] == PieceType.WHITE_PAWN:
+                    return True
+
+        return False
 
     def is_checkmate(self) -> bool:
         """

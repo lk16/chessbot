@@ -6,18 +6,14 @@ from chessbot.enums import Color, PieceType, Square
 
 def main() -> None:
     fields = 64 * [PieceType.EMPTY]
-    fields[Square.F6] = PieceType.WHITE_PAWN
-    fields[Square.E7] = PieceType.BLACK_ROOK
-    fields[Square.G7] = PieceType.BLACK_ROOK
+    fields[Square.A7] = PieceType.WHITE_KING
+    fields[Square.D6] = PieceType.BLACK_PAWN
 
     board = Board(turn=Color.WHITE, fields=fields, en_passent_column=0)
+    board.show()
 
-    children = board.get_moves()
-
-    for child in children:
-        child.show()
-
-    print(f"Found {len(children)} children.")
+    is_checked = board.is_checked()
+    print(f"is_checked: {is_checked}")
 
 
 if __name__ == "__main__":

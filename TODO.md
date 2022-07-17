@@ -20,6 +20,7 @@ Things to consider
 
 # Coming up
 - capture and promote at the same time
+
 - compute if player-to-move is checked
 - compute if player-to-move is checkmated
 - compute castling moves (requires computing check)
