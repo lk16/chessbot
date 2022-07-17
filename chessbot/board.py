@@ -227,9 +227,16 @@ class Board:
             right_capture_square = Square.from_xy(x + 1, y + pawn_delta)
             capture_squares.append(right_capture_square)
 
+        pre_promotion_y = PRE_PROMOTION_Y[self.turn]
+
         for capture_square in capture_squares:
             if self.get_piece_color(capture_square) == self.turn.opponent():
-                moves.append(self.move_piece(square, capture_square))
+
+                if y == pre_promotion_y:
+                    for piece_type in PROMOTION_PIECE_TYPES[self.turn]:
+                        moves.append(self.promote(square, capture_square, piece_type))
+                else:
+                    moves.append(self.move_piece(square, capture_square))
 
         return moves
 

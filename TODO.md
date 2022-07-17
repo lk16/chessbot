@@ -18,7 +18,7 @@ Things to consider
 - [Chessboard editor](https://lichess.org/editor)
 - [Chess opening tree sizes](https://www.chessprogramming.org/Perft_Results)
 
-# This stream
+# Coming up
 - capture and promote at the same time
 - compute if player-to-move is checked
 - compute if player-to-move is checkmated
@@ -27,3 +27,6 @@ Things to consider
 - confirm opening tree sizes
 - load board from FEN
 - export board as FEN (print link to lichess editor)
+- build a bot
+- play bot vs bot
+- play human vs bot

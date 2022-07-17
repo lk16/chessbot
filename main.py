@@ -6,11 +6,11 @@ from chessbot.enums import Color, PieceType, Square
 
 def main() -> None:
     fields = 64 * [PieceType.EMPTY]
-    fields[Square.A4] = PieceType.WHITE_PAWN
-    fields[Square.B4] = PieceType.BLACK_PAWN
-    fields[Square.A5] = PieceType.BLACK_PAWN
+    fields[Square.F6] = PieceType.WHITE_PAWN
+    fields[Square.E7] = PieceType.BLACK_ROOK
+    fields[Square.G7] = PieceType.BLACK_ROOK
 
-    board = Board(turn=Color.BLACK, fields=fields, en_passent_column=0)
+    board = Board(turn=Color.WHITE, fields=fields, en_passent_column=0)
 
     children = board.get_moves()
 
