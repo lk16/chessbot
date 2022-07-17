@@ -19,9 +19,10 @@ Things to consider
 - [Chess opening tree sizes](https://www.chessprogramming.org/Perft_Results)
 
 # This stream
-- compute castling moves
+- capture and promote at the same time
 - compute if player-to-move is checked
 - compute if player-to-move is checkmated
+- compute castling moves (requires computing check)
 - forbid moves that put player-to-move in check
 - confirm opening tree sizes
 - load board from FEN
