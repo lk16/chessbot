@@ -323,21 +323,9 @@ class Board:
     def get_castling_moves(self) -> List["Board"]:
         return []  # TODO
 
-    def is_checked(self) -> bool:
-        """
-        Returns whether the king of the player to move is under attack
-        """
-        if self.turn == Color.WHITE:
-            king_squares = self.find_pieces(PieceType.WHITE_KING)
-        else:
-            king_squares = self.find_pieces(PieceType.BLACK_KING)
-
-        assert len(king_squares) == 1
-        king_square = king_squares[0]
-
+    def is_checked_by_knight(self, king_square: Square) -> bool:
         king_x, king_y = king_square.get_xy()
 
-        # checked by knight
         for dx, dy in KNIGHT_DELTAS:
             knight_x = king_x + dx
             knight_y = king_y + dy
@@ -354,7 +342,11 @@ class Board:
                 if self.fields[knight_square] == PieceType.WHITE_KNIGHT:
                     return True
 
-        # checked by rook/queen
+        return False
+
+    def is_checked_by_rook_or_queen(self, king_square: Square) -> bool:
+        king_x, king_y = king_square.get_xy()
+
         for dx, dy in ROOK_DIRECTIONS:
             for distance in range(1, 8):
                 piece_x = king_x + (dx * distance)
@@ -380,8 +372,11 @@ class Board:
                         return True
                     else:
                         break
+        return False
 
-        # checked by bishop/queen
+    def is_checked_by_bishop_or_queen(self, king_square: Square) -> bool:
+        king_x, king_y = king_square.get_xy()
+
         for dx, dy in BISHOP_DIRECTIONS:
             for distance in range(1, 8):
                 piece_x = king_x + (dx * distance)
@@ -408,7 +403,11 @@ class Board:
                     else:
                         break
 
-        # checked by pawn
+        return False
+
+    def is_checked_by_pawn(self, king_square: Square) -> bool:
+        king_x, king_y = king_square.get_xy()
+
         pawn_squares: List[Square] = []
         for dx in [-1, 1]:
             pawn_x = king_x + dx
@@ -430,6 +429,25 @@ class Board:
                     return True
 
         return False
+
+    def is_checked(self) -> bool:
+        """
+        Returns whether the king of the player to move is under attack
+        """
+        if self.turn == Color.WHITE:
+            king_squares = self.find_pieces(PieceType.WHITE_KING)
+        else:
+            king_squares = self.find_pieces(PieceType.BLACK_KING)
+
+        assert len(king_squares) == 1
+        king_square = king_squares[0]
+
+        return (
+            self.is_checked_by_knight(king_square)
+            or self.is_checked_by_rook_or_queen(king_square)
+            or self.is_checked_by_bishop_or_queen(king_square)
+            or self.is_checked_by_pawn(king_square)
+        )
 
     def is_checkmate(self) -> bool:
         """
