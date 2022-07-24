@@ -1,25 +1,28 @@
 #!/usr/bin/env python
 
+from typing import List
+
 from chessbot.board import Board
 
 
+def get_decendants(board: Board, depth: int) -> List[Board]:
+    if depth == 1:
+        return board.get_moves()
+
+    descendants: List[Board] = []
+
+    for child in board.get_moves():
+        descendants += get_decendants(child, depth - 1)
+
+    return descendants
+
+
 def main() -> None:
-    fen = "r3k2r/8/5B2/8/8/8/8/R3K2R b KQkq - 0 1"
+    board = Board.start()
 
-    board = Board.from_fen(fen)
-
-    moves = board.get_moves()
-    board.show()
-
-    for move in moves:
-        move.show()
-        print()
-        print()
-        print()
-
-    print(f"Found {len(moves)} moves.")
-    print(f"start board is_checkmated: {board.is_checkmate()}")
-    print(f"start board is_stalemated: {board.is_stalemate()}")
+    for depth in range(1, 6):
+        desc_count = len(get_decendants(board, depth))
+        print(f"At depth {depth}: found {desc_count} descendants.")
 
 
 if __name__ == "__main__":
