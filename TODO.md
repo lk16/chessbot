@@ -20,7 +20,6 @@ Things to consider
 - [FEN wiki](https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation)
 
 # Coming up
-- remove all moves that put our king in check
 - update `castling` field of `Board` when king or rook moves
 - compute castling moves (requires computing check)
 - forbid moves that put player-to-move in check

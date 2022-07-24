@@ -106,8 +106,9 @@ class Board:
             assert False
 
         castling = 4 * [False]
-        for char in fen_castling:
-            castling[FEN_CHAR_TO_CASTLING[char]] = True
+        if fen_castling != "-":
+            for char in fen_castling:
+                castling[FEN_CHAR_TO_CASTLING[char]] = True
 
         if fen_en_passent == "-":
             en_passent_column = None
@@ -453,7 +454,7 @@ class Board:
     def get_castling_moves(self) -> List["Board"]:
         return []  # TODO
 
-    def is_attacked_by_knight(self, king_square: Square) -> bool:
+    def is_attacked_by_knight(self, king_square: Square, attacker: Color) -> bool:
         king_x, king_y = king_square.get_xy()
 
         for dx, dy in KNIGHT_DELTAS:
@@ -465,7 +466,7 @@ class Board:
             except InvalidSquareException:
                 continue
 
-            if self.turn == Color.WHITE:
+            if attacker == Color.BLACK:
                 if self.fields[knight_square] == PieceType.BLACK_KNIGHT:
                     return True
             else:
@@ -474,7 +475,9 @@ class Board:
 
         return False
 
-    def is_attacked_by_rook_or_queen(self, king_square: Square) -> bool:
+    def is_attacked_by_rook_or_queen(
+        self, king_square: Square, attacker: Color
+    ) -> bool:
         king_x, king_y = king_square.get_xy()
 
         for dx, dy in ROOK_DIRECTIONS:
@@ -492,7 +495,7 @@ class Board:
                 if piece_type == PieceType.EMPTY:
                     continue
 
-                if self.turn == Color.WHITE:
+                if attacker == Color.BLACK:
                     if piece_type in [PieceType.BLACK_ROOK, PieceType.BLACK_QUEEN]:
                         return True
                     else:
@@ -504,7 +507,9 @@ class Board:
                         break
         return False
 
-    def is_attacked_by_bishop_or_queen(self, king_square: Square) -> bool:
+    def is_attacked_by_bishop_or_queen(
+        self, king_square: Square, attacker: Color
+    ) -> bool:
         king_x, king_y = king_square.get_xy()
 
         for dx, dy in BISHOP_DIRECTIONS:
@@ -522,7 +527,7 @@ class Board:
                 if piece_type == PieceType.EMPTY:
                     continue
 
-                if self.turn == Color.WHITE:
+                if attacker == Color.BLACK:
                     if piece_type in [PieceType.BLACK_BISHOP, PieceType.BLACK_QUEEN]:
                         return True
                     else:
@@ -535,13 +540,13 @@ class Board:
 
         return False
 
-    def is_attacked_by_pawn(self, king_square: Square) -> bool:
+    def is_attacked_by_pawn(self, king_square: Square, attacker: Color) -> bool:
         king_x, king_y = king_square.get_xy()
 
         pawn_squares: List[Square] = []
         for dx in [-1, 1]:
             pawn_x = king_x + dx
-            pawn_y = king_y - PAWN_DELTA_Y[self.turn.opponent()]
+            pawn_y = king_y - PAWN_DELTA_Y[attacker]
 
             try:
                 pawn_square = Square.from_xy(pawn_x, pawn_y)
@@ -551,7 +556,7 @@ class Board:
             pawn_squares.append(pawn_square)
 
         for pawn_square in pawn_squares:
-            if self.turn == Color.WHITE:
+            if attacker == Color.BLACK:
                 if self.fields[pawn_square] == PieceType.BLACK_PAWN:
                     return True
             else:
@@ -560,11 +565,13 @@ class Board:
 
         return False
 
-    def is_checked(self) -> bool:
+    def is_checked(self, color: Color) -> bool:
         """
         Returns whether the king of the player to move is under attack
         """
-        if self.turn == Color.WHITE:
+        assert color != Color.NOBODY
+
+        if color == Color.WHITE:
             king_squares = self.find_pieces(PieceType.WHITE_KING)
         else:
             king_squares = self.find_pieces(PieceType.BLACK_KING)
@@ -572,14 +579,14 @@ class Board:
         assert len(king_squares) == 1
         king_square = king_squares[0]
 
-        return self.is_attacked(king_square)
+        return self.is_attacked(king_square, color.opponent())
 
-    def is_attacked(self, square: Square) -> bool:
+    def is_attacked(self, square: Square, attacker: Color) -> bool:
         return (
-            self.is_attacked_by_knight(square)
-            or self.is_attacked_by_rook_or_queen(square)
-            or self.is_attacked_by_bishop_or_queen(square)
-            or self.is_attacked_by_pawn(square)
+            self.is_attacked_by_knight(square, attacker)
+            or self.is_attacked_by_rook_or_queen(square, attacker)
+            or self.is_attacked_by_bishop_or_queen(square, attacker)
+            or self.is_attacked_by_pawn(square, attacker)
         )
 
     def get_moves(self) -> List["Board"]:
@@ -621,13 +628,24 @@ class Board:
 
         moves += self.get_castling_moves()
 
-        # TODO remove all moves that put our king in check
+        safe_moves: List["Board"] = []
 
-        return moves
+        for move in moves:
+            if not move.is_checked(self.turn):
+                safe_moves.append(move)
+
+        return safe_moves
 
     def is_checkmate(self) -> bool:
         """
         Returns whether the king of the player to move is checkmated
         """
         moves = self.get_moves()
-        return self.is_checked() and len(moves) == 0
+        return self.is_checked(self.turn) and len(moves) == 0
+
+    def is_stalemate(self) -> bool:
+        """
+        Returns whether player to move has no moves but is not in check
+        """
+        moves = self.get_moves()
+        return not self.is_checked(self.turn) and len(moves) == 0
