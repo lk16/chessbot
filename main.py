@@ -4,10 +4,13 @@ from chessbot.board import Board
 
 
 def main() -> None:
-    fen = "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2"
+    fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
 
     board = Board.from_fen(fen)
+
     board.show()
+    print(board.to_fen())
+    print(board.editor_link())
 
 
 if __name__ == "__main__":

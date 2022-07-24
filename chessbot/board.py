@@ -4,12 +4,15 @@ from chessbot.board_printer import print_board
 from chessbot.constants import (
     BISHOP_DIRECTIONS,
     BOARD_START_FIELDS,
+    CASTLING_TO_FEN_CHAR,
     EN_PASSENT_CAPTURER_Y,
-    FEN_CHAR_PIECE_TYPES,
+    FEN_CHAR_TO_CASTLING,
+    FEN_CHAR_TO_PIECE_TYPE,
     KING_DELTAS,
     KNIGHT_DELTAS,
     PAWN_DELTA_Y,
     PAWN_START_Y,
+    PIECE_TYPE_TO_FEN_CHAR,
     PRE_PROMOTION_Y,
     PROMOTION_PIECE_TYPES,
     QUEEN_DIRECTIONS,
@@ -69,6 +72,7 @@ class Board:
     def from_fen(fen: str) -> "Board":
         split_fen = fen.split(" ")
         assert len(split_fen) == 6
+
         (
             fen_pieces,
             fen_turn,
@@ -89,7 +93,7 @@ class Board:
                 if char.isnumeric():
                     x += int(char)
                 else:
-                    fields[8 * y + x] = FEN_CHAR_PIECE_TYPES[char]
+                    fields[8 * y + x] = FEN_CHAR_TO_PIECE_TYPE[char]
                     x += 1
 
             assert x == 8
@@ -103,22 +107,13 @@ class Board:
 
         castling = 4 * [False]
         for char in fen_castling:
-            if "k":
-                castling[Castling.BLACK_SHORT] = True
-            elif "q":
-                castling[Castling.BLACK_LONG] = True
-            elif "K":
-                castling[Castling.WHITE_SHORT] = True
-            elif "Q":
-                castling[Castling.WHITE_LONG] = True
-            else:
-                assert False
+            castling[FEN_CHAR_TO_CASTLING[char]] = True
 
         if fen_en_passent == "-":
             en_passent_column = None
         else:
             assert fen_en_passent[0] in "abcdefgh"
-            en_passent_column = ord(fen_en_passent[1]) - ord("a")
+            en_passent_column = ord(fen_en_passent[0]) - ord("a")
 
         # TODO use
         _ = pawn_clock
@@ -132,10 +127,63 @@ class Board:
         )
 
     def to_fen(self) -> str:
-        return ""  # TODO
+        fen_pieces = ""
+        for y in range(8):
+            empty_counter = 0
+            for x in range(8):
+                piece_type = self.fields[8 * y + x]
+
+                if piece_type == PieceType.EMPTY:
+                    empty_counter += 1
+                else:
+                    if empty_counter != 0:
+                        fen_pieces += str(empty_counter)
+                        empty_counter = 0
+                    fen_pieces += PIECE_TYPE_TO_FEN_CHAR[piece_type]
+
+            if empty_counter != 0:
+                fen_pieces += str(empty_counter)
+
+            if y != 7:
+                fen_pieces += "/"
+
+        if self.turn == Color.WHITE:
+            fen_turn = "w"
+        else:
+            fen_turn = "b"
+
+        fen_castling = ""
+        for c in Castling:
+            if self.castling[c]:
+                fen_castling += CASTLING_TO_FEN_CHAR[c]
+
+        if self.en_passent_column is None:
+            fen_en_passent = "-"
+        else:
+            fen_en_passent = chr(ord("a") + self.en_passent_column)
+            if self.turn == Color.WHITE:
+                fen_en_passent += "6"
+            else:
+                fen_en_passent += "3"
+
+        # TODO set when created
+        pawn_clock = "0"
+        full_move_count = "0"
+
+        return " ".join(
+            [
+                fen_pieces,
+                fen_turn,
+                fen_castling,
+                fen_en_passent,
+                pawn_clock,
+                full_move_count,
+            ]
+        )
 
     def editor_link(self) -> str:
-        return ""  # TODO
+        fen = self.to_fen()
+        return "https://lichess.org/editor/" + "_".join(fen.split(" ")) + "?color=white"
 
     def __hash__(self) -> int:
         return hash(self.to_fen())

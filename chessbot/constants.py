@@ -1,4 +1,4 @@
-from chessbot.enums import PieceType
+from chessbot.enums import Castling, PieceType
 
 BOARD_START_FIELDS = (
     (
@@ -105,7 +105,7 @@ EN_PASSENT_CAPTURER_Y = [
     4,  # WHITE
 ]
 
-FEN_CHAR_PIECE_TYPES = {
+FEN_CHAR_TO_PIECE_TYPE = {
     "b": PieceType.BLACK_BISHOP,
     "B": PieceType.WHITE_BISHOP,
     "k": PieceType.BLACK_KING,
@@ -118,4 +118,34 @@ FEN_CHAR_PIECE_TYPES = {
     "Q": PieceType.WHITE_QUEEN,
     "r": PieceType.BLACK_ROOK,
     "R": PieceType.WHITE_ROOK,
+}
+
+PIECE_TYPE_TO_FEN_CHAR = {
+    PieceType.BLACK_BISHOP: "b",
+    PieceType.BLACK_KING: "k",
+    PieceType.BLACK_KNIGHT: "n",
+    PieceType.BLACK_PAWN: "p",
+    PieceType.BLACK_QUEEN: "q",
+    PieceType.BLACK_ROOK: "r",
+    PieceType.WHITE_BISHOP: "B",
+    PieceType.WHITE_KING: "K",
+    PieceType.WHITE_KNIGHT: "N",
+    PieceType.WHITE_PAWN: "P",
+    PieceType.WHITE_QUEEN: "Q",
+    PieceType.WHITE_ROOK: "R",
+}
+
+
+FEN_CHAR_TO_CASTLING = {
+    "k": Castling.BLACK_SHORT,
+    "q": Castling.BLACK_LONG,
+    "K": Castling.WHITE_SHORT,
+    "Q": Castling.WHITE_LONG,
+}
+
+CASTLING_TO_FEN_CHAR = {
+    Castling.BLACK_SHORT: "k",
+    Castling.BLACK_LONG: "q",
+    Castling.WHITE_SHORT: "K",
+    Castling.WHITE_LONG: "Q",
 }

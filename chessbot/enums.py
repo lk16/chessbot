@@ -124,7 +124,7 @@ class Color(IntEnum):
 
 
 class Castling(IntEnum):
-    BLACK_SHORT = 0
-    BLACK_LONG = 1
-    WHITE_SHORT = 2
-    WHITE_LONG = 3
+    WHITE_SHORT = 0
+    WHITE_LONG = 1
+    BLACK_SHORT = 2
+    BLACK_LONG = 3
