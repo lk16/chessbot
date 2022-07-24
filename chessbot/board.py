@@ -190,7 +190,11 @@ class Board:
         return hash(self.to_fen())
 
     def move_piece(
-        self, from_: Square, to: Square, en_passent_column: Optional[int] = None
+        self,
+        from_: Square,
+        to: Square,
+        en_passent_column: Optional[int] = None,
+        disallow_castling: Optional[List[Castling]] = None,
     ) -> "Board":
         # we can't only move our own pieces
         assert self.get_piece_color(from_) == self.turn
@@ -202,12 +206,18 @@ class Board:
         # self.fields won't (and can't) be changed
         fields = list(self.fields)
 
+        castling = list(self.castling)
+        if disallow_castling is not None:
+            for disallow_castling_item in disallow_castling:
+                castling[disallow_castling_item] = False
+
         fields[to] = fields[from_]
         fields[from_] = PieceType.EMPTY
         return Board(
             turn=self.turn.opponent(),
             fields=fields,
             en_passent_column=en_passent_column,
+            castling=castling,
         )
 
     def promote(self, from_: Square, to: Square, piece_type: PieceType) -> "Board":
@@ -221,6 +231,11 @@ class Board:
 
     def show(self, *args: Any, **kwargs: Any) -> None:
         print_board(self, *args, **kwargs)
+        print("Allowed castling: ", end="")
+        for c in Castling:
+            if self.castling[c]:
+                print(f"{c.name} ", end="")
+        print("")
 
     def find_pieces(self, piece_type: PieceType) -> List[Square]:
         squares: List[Square] = []
@@ -271,7 +286,18 @@ class Board:
                 # we're about to capture our own piece
                 continue
 
-            children.append(self.move_piece(square, move_square))
+            if self.turn == Color.WHITE:
+                disallow_castling = [Castling.WHITE_SHORT, Castling.WHITE_LONG]
+            else:
+                disallow_castling = [Castling.BLACK_SHORT, Castling.BLACK_LONG]
+
+            child = self.move_piece(
+                square,
+                move_square,
+                disallow_castling=disallow_castling,
+            )
+
+            children.append(child)
 
         return children
 
@@ -280,6 +306,7 @@ class Board:
         square: Square,
         dx: int,
         dy: int,
+        disallow_castling: Optional[List[Castling]] = None,
     ) -> List["Board"]:
         x, y = square.get_xy()
 
@@ -315,7 +342,13 @@ class Board:
 
             # target square is empty or has opponent piece
 
-            children.append(self.move_piece(square, move_square))
+            child = self.move_piece(
+                square,
+                move_square,
+                disallow_castling=disallow_castling,
+            )
+
+            children.append(child)
 
             if target_piece_color == self.turn.opponent():
                 # we captured a piece from the opponent
@@ -325,9 +358,24 @@ class Board:
         return children
 
     def get_rook_moves(self, square: Square) -> List["Board"]:
+        disallow_castling = None
+
+        if self.turn == Color.WHITE:
+            if square == Square.A1:
+                disallow_castling = [Castling.WHITE_LONG]
+            elif square == Square.H1:
+                disallow_castling = [Castling.WHITE_SHORT]
+        else:
+            if square == Square.A8:
+                disallow_castling = [Castling.BLACK_LONG]
+            elif square == Square.H8:
+                disallow_castling = [Castling.BLACK_SHORT]
+
         children: List["Board"] = []
         for dx, dy in ROOK_DIRECTIONS:
-            children += self.get_range_moves_one_direction(square, dx, dy)
+            children += self.get_range_moves_one_direction(
+                square, dx, dy, disallow_castling=disallow_castling
+            )
         return children
 
     def get_bishop_moves(self, square: Square) -> List["Board"]:

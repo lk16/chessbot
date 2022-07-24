@@ -4,7 +4,7 @@ from chessbot.board import Board
 
 
 def main() -> None:
-    fen = "6k1/8/4P3/8/8/8/1K4R1/8 b - - 0 1"
+    fen = "r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1"
 
     board = Board.from_fen(fen)
 
@@ -13,6 +13,9 @@ def main() -> None:
 
     for move in moves:
         move.show()
+        print()
+        print()
+        print()
 
     print(f"Found {len(moves)} moves.")
     print(f"start board is_checkmated: {board.is_checkmate()}")
