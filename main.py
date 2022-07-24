@@ -4,7 +4,7 @@ from chessbot.board import Board
 
 
 def main() -> None:
-    fen = "r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1"
+    fen = "r3k2r/8/5B2/8/8/8/8/R3K2R b KQkq - 0 1"
 
     board = Board.from_fen(fen)
 
