@@ -1,20 +1,16 @@
 #!/usr/bin/env python
 
 from chessbot.board import Board
-from chessbot.enums import Color, PieceType, Square
 
 
 def main() -> None:
-    fields = 64 * [PieceType.EMPTY]
-    fields[Square.C5] = PieceType.WHITE_KING
-    fields[Square.G1] = PieceType.BLACK_BISHOP
-    fields[Square.E3] = PieceType.BLACK_PAWN
+    fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
 
-    board = Board(turn=Color.WHITE, fields=fields, en_passent_column=0)
+    board = Board.from_fen(fen)
+
     board.show()
-
-    is_checked = board.is_checked()
-    print(f"is_checked: {is_checked}")
+    print(board.to_fen())
+    print(board.editor_link())
 
 
 if __name__ == "__main__":

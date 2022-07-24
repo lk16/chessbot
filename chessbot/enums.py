@@ -121,3 +121,10 @@ class Color(IntEnum):
             return Color.BLACK
 
         return Color.WHITE
+
+
+class Castling(IntEnum):
+    WHITE_SHORT = 0
+    WHITE_LONG = 1
+    BLACK_SHORT = 2
+    BLACK_LONG = 3
