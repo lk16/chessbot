@@ -104,3 +104,18 @@ EN_PASSENT_CAPTURER_Y = [
     3,  # BLACK
     4,  # WHITE
 ]
+
+FEN_CHAR_PIECE_TYPES = {
+    "b": PieceType.BLACK_BISHOP,
+    "B": PieceType.WHITE_BISHOP,
+    "k": PieceType.BLACK_KING,
+    "K": PieceType.WHITE_KING,
+    "n": PieceType.BLACK_KNIGHT,
+    "N": PieceType.WHITE_KNIGHT,
+    "p": PieceType.BLACK_PAWN,
+    "P": PieceType.WHITE_PAWN,
+    "q": PieceType.BLACK_QUEEN,
+    "Q": PieceType.WHITE_QUEEN,
+    "r": PieceType.BLACK_ROOK,
+    "R": PieceType.WHITE_ROOK,
+}

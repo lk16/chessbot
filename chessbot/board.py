@@ -5,6 +5,7 @@ from chessbot.constants import (
     BISHOP_DIRECTIONS,
     BOARD_START_FIELDS,
     EN_PASSENT_CAPTURER_Y,
+    FEN_CHAR_PIECE_TYPES,
     KING_DELTAS,
     KNIGHT_DELTAS,
     PAWN_DELTA_Y,
@@ -14,7 +15,7 @@ from chessbot.constants import (
     QUEEN_DIRECTIONS,
     ROOK_DIRECTIONS,
 )
-from chessbot.enums import Color, PieceType, Square
+from chessbot.enums import Castling, Color, PieceType, Square
 from chessbot.exceptions import InvalidSquareException
 
 
@@ -24,16 +25,23 @@ class Board:
         turn: Color,
         fields: Iterable[PieceType],
         en_passent_column: Optional[int] = None,
+        castling: Optional[Iterable[bool]] = None,
     ) -> None:
+        if castling:
+            castling_tuple = tuple(castling)
+        else:
+            castling_tuple = 4 * (False,)
+
         self.fields: Final[Tuple[PieceType, ...]] = tuple(fields)
         self.turn: Final[Color] = turn
         self.en_passent_column: Optional[int] = en_passent_column
-
+        self.castling: Final[Tuple[bool, ...]] = castling_tuple
         self.validate()
 
     def validate(self) -> None:
         assert self.turn != Color.NOBODY
         assert len(self.fields) == 64
+        assert len(self.castling) == 4
 
     @staticmethod
     def empty() -> "Board":
@@ -42,7 +50,7 @@ class Board:
 
     @staticmethod
     def start() -> "Board":
-        return Board(turn=Color.WHITE, fields=BOARD_START_FIELDS)
+        return Board(turn=Color.WHITE, fields=BOARD_START_FIELDS, castling=4 * [True])
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Board):
@@ -52,11 +60,85 @@ class Board:
             [
                 self.turn == other.turn,
                 self.fields == other.fields,
+                self.en_passent_column == other.en_passent_column,
+                self.castling == other.castling,
             ]
         )
 
+    @staticmethod
+    def from_fen(fen: str) -> "Board":
+        split_fen = fen.split(" ")
+        assert len(split_fen) == 6
+        (
+            fen_pieces,
+            fen_turn,
+            fen_castling,
+            fen_en_passent,
+            pawn_clock,
+            full_move_count,
+        ) = split_fen
+
+        fen_piece_rows = fen_pieces.split("/")
+        assert len(fen_piece_rows) == 8
+
+        fields = 64 * [PieceType.EMPTY]
+
+        for y, row in enumerate(fen_piece_rows):
+            x = 0
+            for char in row:
+                if char.isnumeric():
+                    x += int(char)
+                else:
+                    fields[8 * y + x] = FEN_CHAR_PIECE_TYPES[char]
+                    x += 1
+
+            assert x == 8
+
+        if fen_turn == "b":
+            turn = Color.BLACK
+        elif fen_turn == "w":
+            turn = Color.WHITE
+        else:
+            assert False
+
+        castling = 4 * [False]
+        for char in fen_castling:
+            if "k":
+                castling[Castling.BLACK_SHORT] = True
+            elif "q":
+                castling[Castling.BLACK_LONG] = True
+            elif "K":
+                castling[Castling.WHITE_SHORT] = True
+            elif "Q":
+                castling[Castling.WHITE_LONG] = True
+            else:
+                assert False
+
+        if fen_en_passent == "-":
+            en_passent_column = None
+        else:
+            assert fen_en_passent[0] in "abcdefgh"
+            en_passent_column = ord(fen_en_passent[1]) - ord("a")
+
+        # TODO use
+        _ = pawn_clock
+        _ = full_move_count
+
+        return Board(
+            turn=turn,
+            fields=fields,
+            en_passent_column=en_passent_column,
+            castling=castling,
+        )
+
+    def to_fen(self) -> str:
+        return ""  # TODO
+
+    def editor_link(self) -> str:
+        return ""  # TODO
+
     def __hash__(self) -> int:
-        return hash((self.fields, self.turn))
+        return hash(self.to_fen())
 
     def move_piece(
         self, from_: Square, to: Square, en_passent_column: Optional[int] = None
