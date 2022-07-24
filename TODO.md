@@ -20,6 +20,7 @@ Things to consider
 - [FEN wiki](https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation)
 
 # Coming up
+- update `castling` field of `Board` when king or rook moves
 - compute castling moves (requires computing check)
 - forbid moves that put player-to-move in check
 - confirm opening tree sizes
