@@ -323,7 +323,7 @@ class Board:
     def get_castling_moves(self) -> List["Board"]:
         return []  # TODO
 
-    def is_checked_by_knight(self, king_square: Square) -> bool:
+    def is_attacked_by_knight(self, king_square: Square) -> bool:
         king_x, king_y = king_square.get_xy()
 
         for dx, dy in KNIGHT_DELTAS:
@@ -344,7 +344,7 @@ class Board:
 
         return False
 
-    def is_checked_by_rook_or_queen(self, king_square: Square) -> bool:
+    def is_attacked_by_rook_or_queen(self, king_square: Square) -> bool:
         king_x, king_y = king_square.get_xy()
 
         for dx, dy in ROOK_DIRECTIONS:
@@ -374,7 +374,7 @@ class Board:
                         break
         return False
 
-    def is_checked_by_bishop_or_queen(self, king_square: Square) -> bool:
+    def is_attacked_by_bishop_or_queen(self, king_square: Square) -> bool:
         king_x, king_y = king_square.get_xy()
 
         for dx, dy in BISHOP_DIRECTIONS:
@@ -405,7 +405,7 @@ class Board:
 
         return False
 
-    def is_checked_by_pawn(self, king_square: Square) -> bool:
+    def is_attacked_by_pawn(self, king_square: Square) -> bool:
         king_x, king_y = king_square.get_xy()
 
         pawn_squares: List[Square] = []
@@ -442,18 +442,15 @@ class Board:
         assert len(king_squares) == 1
         king_square = king_squares[0]
 
-        return (
-            self.is_checked_by_knight(king_square)
-            or self.is_checked_by_rook_or_queen(king_square)
-            or self.is_checked_by_bishop_or_queen(king_square)
-            or self.is_checked_by_pawn(king_square)
-        )
+        return self.is_attacked(king_square)
 
-    def is_checkmate(self) -> bool:
-        """
-        Returns whether the king of the player to move is checkmated
-        """
-        return False  # TODO
+    def is_attacked(self, square: Square) -> bool:
+        return (
+            self.is_attacked_by_knight(square)
+            or self.is_attacked_by_rook_or_queen(square)
+            or self.is_attacked_by_bishop_or_queen(square)
+            or self.is_attacked_by_pawn(square)
+        )
 
     def get_moves(self) -> List["Board"]:
         moves: List["Board"] = []
@@ -494,4 +491,13 @@ class Board:
 
         moves += self.get_castling_moves()
 
+        # TODO remove all moves that put our king in check
+
         return moves
+
+    def is_checkmate(self) -> bool:
+        """
+        Returns whether the king of the player to move is checkmated
+        """
+        moves = self.get_moves()
+        return self.is_checked() and len(moves) == 0
