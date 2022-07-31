@@ -744,6 +744,25 @@ class Board:
 
         return False
 
+    def is_attacked_by_king(self, king_square: Square, attacker: Color) -> bool:
+        if attacker == Color.WHITE:
+            king_piecetype = PieceType.WHITE_KING
+        else:
+            king_piecetype = PieceType.BLACK_KING
+
+        x, y = king_square.get_xy()
+
+        for dx, dy in KING_DELTAS:
+            try:
+                attacking_king_square = Square.from_xy(x + dx, y + dy)
+            except InvalidSquareException:
+                continue
+
+            if self.fields[attacking_king_square] == king_piecetype:
+                return True
+
+        return False
+
     def is_checked(self, color: Color) -> bool:
         """
         Returns whether the king of the player to move is under attack
@@ -766,6 +785,7 @@ class Board:
             or self.is_attacked_by_rook_or_queen(square, attacker)
             or self.is_attacked_by_bishop_or_queen(square, attacker)
             or self.is_attacked_by_pawn(square, attacker)
+            or self.is_attacked_by_king(square, attacker)
         )
 
     def get_moves(self) -> List["Board"]:
