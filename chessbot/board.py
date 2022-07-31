@@ -453,44 +453,35 @@ class Board:
     def get_pawn_en_passent_moves(self, square: Square) -> List["Board"]:
         x, y = square.get_xy()
 
-        if any(
-            [
-                self.en_passent_column is None,  # en passent not possible at all
-                x != self.en_passent_column,  # another pawn can take en passent
-                y
-                != EN_PASSENT_CAPTURER_Y[
-                    self.turn
-                ],  # cannot take en passent from this row
-            ]
-        ):
+        if not self.en_passent_column:
             return []
 
-        pawn_delta_y = PAWN_DELTA_Y[self.turn]
+        if y != EN_PASSENT_CAPTURER_Y[self.turn]:
+            return []
 
-        move_squares: List[Square] = []
-        moves: List["Board"] = []
+        if x not in [self.en_passent_column + 1, self.en_passent_column - 1]:
+            return []
 
-        if x != 0:
-            left_move_square = Square.from_xy(x - 1, y + pawn_delta_y)
-            move_squares.append(left_move_square)
+        move_square = Square.from_xy(
+            self.en_passent_column,
+            y + PAWN_DELTA_Y[self.turn],
+        )
 
-        if x != 7:
-            right_move_square = Square.from_xy(x + 1, y + pawn_delta_y)
-            move_squares.append(right_move_square)
+        if self.fields[move_square] != PieceType.EMPTY:
+            return []
 
-        en_passent_square = Square.from_xy(x, y + pawn_delta_y)
+        en_passent_square = Square.from_xy(
+            self.en_passent_column,
+            EN_PASSENT_CAPTURER_Y[self.turn],
+        )
 
-        for move_square in move_squares:
-            if self.get_piece_color(move_square) == Color.NOBODY:
-                fields = list(self.fields)
-                fields[en_passent_square] = PieceType.EMPTY
-                fields[move_square] = self.fields[square]
-                fields[square] = PieceType.EMPTY
+        fields = list(self.fields)
+        fields[move_square] = self.fields[square]
+        fields[en_passent_square] = PieceType.EMPTY
+        fields[square] = PieceType.EMPTY
 
-                move = Board(fields=fields, turn=self.turn.opponent())
-                moves.append(move)
-
-        return moves
+        move = Board(fields=fields, turn=self.turn.opponent())
+        return [move]
 
     def get_pawn_moves(self, square: Square) -> List["Board"]:
         return (

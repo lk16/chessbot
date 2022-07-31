@@ -101,8 +101,8 @@ PAWN_DELTA_Y = [
 ]
 
 EN_PASSENT_CAPTURER_Y = [
-    3,  # BLACK
-    4,  # WHITE
+    4,  # BLACK
+    3,  # WHITE
 ]
 
 FEN_CHAR_TO_PIECE_TYPE = {
