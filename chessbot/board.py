@@ -106,8 +106,9 @@ class Board:
             assert False
 
         castling = 4 * [False]
-        for char in fen_castling:
-            castling[FEN_CHAR_TO_CASTLING[char]] = True
+        if fen_castling != "-":
+            for char in fen_castling:
+                castling[FEN_CHAR_TO_CASTLING[char]] = True
 
         if fen_en_passent == "-":
             en_passent_column = None
@@ -189,7 +190,11 @@ class Board:
         return hash(self.to_fen())
 
     def move_piece(
-        self, from_: Square, to: Square, en_passent_column: Optional[int] = None
+        self,
+        from_: Square,
+        to: Square,
+        en_passent_column: Optional[int] = None,
+        disallow_castling: Optional[List[Castling]] = None,
     ) -> "Board":
         # we can't only move our own pieces
         assert self.get_piece_color(from_) == self.turn
@@ -201,12 +206,18 @@ class Board:
         # self.fields won't (and can't) be changed
         fields = list(self.fields)
 
+        castling = list(self.castling)
+        if disallow_castling is not None:
+            for disallow_castling_item in disallow_castling:
+                castling[disallow_castling_item] = False
+
         fields[to] = fields[from_]
         fields[from_] = PieceType.EMPTY
         return Board(
             turn=self.turn.opponent(),
             fields=fields,
             en_passent_column=en_passent_column,
+            castling=castling,
         )
 
     def promote(self, from_: Square, to: Square, piece_type: PieceType) -> "Board":
@@ -220,6 +231,11 @@ class Board:
 
     def show(self, *args: Any, **kwargs: Any) -> None:
         print_board(self, *args, **kwargs)
+        print("Allowed castling: ", end="")
+        for c in Castling:
+            if self.castling[c]:
+                print(f"{c.name} ", end="")
+        print("")
 
     def find_pieces(self, piece_type: PieceType) -> List[Square]:
         squares: List[Square] = []
@@ -270,7 +286,18 @@ class Board:
                 # we're about to capture our own piece
                 continue
 
-            children.append(self.move_piece(square, move_square))
+            if self.turn == Color.WHITE:
+                disallow_castling = [Castling.WHITE_SHORT, Castling.WHITE_LONG]
+            else:
+                disallow_castling = [Castling.BLACK_SHORT, Castling.BLACK_LONG]
+
+            child = self.move_piece(
+                square,
+                move_square,
+                disallow_castling=disallow_castling,
+            )
+
+            children.append(child)
 
         return children
 
@@ -279,6 +306,7 @@ class Board:
         square: Square,
         dx: int,
         dy: int,
+        disallow_castling: Optional[List[Castling]] = None,
     ) -> List["Board"]:
         x, y = square.get_xy()
 
@@ -314,7 +342,13 @@ class Board:
 
             # target square is empty or has opponent piece
 
-            children.append(self.move_piece(square, move_square))
+            child = self.move_piece(
+                square,
+                move_square,
+                disallow_castling=disallow_castling,
+            )
+
+            children.append(child)
 
             if target_piece_color == self.turn.opponent():
                 # we captured a piece from the opponent
@@ -324,9 +358,24 @@ class Board:
         return children
 
     def get_rook_moves(self, square: Square) -> List["Board"]:
+        disallow_castling = None
+
+        if self.turn == Color.WHITE:
+            if square == Square.A1:
+                disallow_castling = [Castling.WHITE_LONG]
+            elif square == Square.H1:
+                disallow_castling = [Castling.WHITE_SHORT]
+        else:
+            if square == Square.A8:
+                disallow_castling = [Castling.BLACK_LONG]
+            elif square == Square.H8:
+                disallow_castling = [Castling.BLACK_SHORT]
+
         children: List["Board"] = []
         for dx, dy in ROOK_DIRECTIONS:
-            children += self.get_range_moves_one_direction(square, dx, dy)
+            children += self.get_range_moves_one_direction(
+                square, dx, dy, disallow_castling=disallow_castling
+            )
         return children
 
     def get_bishop_moves(self, square: Square) -> List["Board"]:
@@ -450,10 +499,150 @@ class Board:
             + self.get_pawn_en_passent_moves(square)
         )
 
-    def get_castling_moves(self) -> List["Board"]:
-        return []  # TODO
+    def get_white_castling_moves(self) -> List["Board"]:
 
-    def is_checked_by_knight(self, king_square: Square) -> bool:
+        # The king is not currently in check.
+        if self.is_checked(self.turn):
+            return []
+
+        moves: List["Board"] = []
+
+        # Neither the king nor the rook has previously moved.
+        # There are no pieces between the king and the rook.
+        # The king does not pass through a square that is attacked by an opposing piece.
+        if (
+            self.castling[Castling.WHITE_SHORT]
+            and self.fields[Square.F1] == PieceType.EMPTY
+            and self.fields[Square.G1] == PieceType.EMPTY
+            and not self.is_attacked(Square.F1, self.turn.opponent())
+        ):
+            # we CAN castle short as white
+
+            fields = list(self.fields)
+            fields[Square.E1] = PieceType.EMPTY
+            fields[Square.F1] = PieceType.WHITE_ROOK
+            fields[Square.G1] = PieceType.WHITE_KING
+            fields[Square.H1] = PieceType.EMPTY
+
+            castling = list(self.castling)
+            castling[Castling.WHITE_SHORT] = False
+            castling[Castling.WHITE_LONG] = False
+
+            short_castle_move = Board(
+                turn=self.turn.opponent(),
+                fields=fields,
+                castling=castling,
+            )
+
+            moves.append(short_castle_move)
+
+        # Neither the king nor the rook has previously moved.
+        # There are no pieces between the king and the rook.
+        # The king does not pass through a square that is attacked by an opposing piece.
+        if (
+            self.castling[Castling.WHITE_LONG]
+            and self.fields[Square.B1] == PieceType.EMPTY
+            and self.fields[Square.C1] == PieceType.EMPTY
+            and self.fields[Square.D1] == PieceType.EMPTY
+            and not self.is_attacked(Square.D1, self.turn.opponent())
+        ):
+            # we CAN castle long as white
+
+            fields = list(self.fields)
+            fields[Square.A1] = PieceType.EMPTY
+            fields[Square.C1] = PieceType.WHITE_KING
+            fields[Square.D1] = PieceType.WHITE_ROOK
+            fields[Square.E1] = PieceType.EMPTY
+
+            castling = list(self.castling)
+            castling[Castling.WHITE_SHORT] = False
+            castling[Castling.WHITE_LONG] = False
+
+            long_castle_move = Board(
+                turn=self.turn.opponent(),
+                fields=fields,
+                castling=castling,
+            )
+
+            moves.append(long_castle_move)
+
+        return moves
+
+    def get_black_castling_moves(self) -> List["Board"]:
+        # The king is not currently in check.
+        if self.is_checked(self.turn):
+            return []
+
+        moves: List["Board"] = []
+
+        # Neither the king nor the rook has previously moved.
+        # There are no pieces between the king and the rook.
+        # The king does not pass through a square that is attacked by an opposing piece.
+        if (
+            self.castling[Castling.BLACK_SHORT]
+            and self.fields[Square.F8] == PieceType.EMPTY
+            and self.fields[Square.G8] == PieceType.EMPTY
+            and not self.is_attacked(Square.F8, self.turn.opponent())
+        ):
+            # we CAN castle short as black
+
+            fields = list(self.fields)
+            fields[Square.E8] = PieceType.EMPTY
+            fields[Square.F8] = PieceType.BLACK_ROOK
+            fields[Square.G8] = PieceType.BLACK_KING
+            fields[Square.H8] = PieceType.EMPTY
+
+            castling = list(self.castling)
+            castling[Castling.BLACK_SHORT] = False
+            castling[Castling.BLACK_LONG] = False
+
+            short_castle_move = Board(
+                turn=self.turn.opponent(),
+                fields=fields,
+                castling=castling,
+            )
+
+            moves.append(short_castle_move)
+
+        # Neither the king nor the rook has previously moved.
+        # There are no pieces between the king and the rook.
+        # The king does not pass through a square that is attacked by an opposing piece.
+        if (
+            self.castling[Castling.BLACK_LONG]
+            and self.fields[Square.B8] == PieceType.EMPTY
+            and self.fields[Square.C8] == PieceType.EMPTY
+            and self.fields[Square.D8] == PieceType.EMPTY
+            and not self.is_attacked(Square.D8, self.turn.opponent())
+        ):
+            # we CAN castle long as black
+
+            fields = list(self.fields)
+            fields[Square.A8] = PieceType.EMPTY
+            fields[Square.C8] = PieceType.BLACK_KING
+            fields[Square.D8] = PieceType.BLACK_ROOK
+            fields[Square.E8] = PieceType.EMPTY
+
+            castling = list(self.castling)
+            castling[Castling.BLACK_SHORT] = False
+            castling[Castling.BLACK_LONG] = False
+
+            long_castle_move = Board(
+                turn=self.turn.opponent(),
+                fields=fields,
+                castling=castling,
+            )
+
+            moves.append(long_castle_move)
+
+        return moves
+
+    def get_castling_moves(self) -> List["Board"]:
+        if self.turn == Color.WHITE:
+            return self.get_white_castling_moves()
+        else:
+            return self.get_black_castling_moves()
+
+    def is_attacked_by_knight(self, king_square: Square, attacker: Color) -> bool:
         king_x, king_y = king_square.get_xy()
 
         for dx, dy in KNIGHT_DELTAS:
@@ -465,7 +654,7 @@ class Board:
             except InvalidSquareException:
                 continue
 
-            if self.turn == Color.WHITE:
+            if attacker == Color.BLACK:
                 if self.fields[knight_square] == PieceType.BLACK_KNIGHT:
                     return True
             else:
@@ -474,7 +663,9 @@ class Board:
 
         return False
 
-    def is_checked_by_rook_or_queen(self, king_square: Square) -> bool:
+    def is_attacked_by_rook_or_queen(
+        self, king_square: Square, attacker: Color
+    ) -> bool:
         king_x, king_y = king_square.get_xy()
 
         for dx, dy in ROOK_DIRECTIONS:
@@ -492,7 +683,7 @@ class Board:
                 if piece_type == PieceType.EMPTY:
                     continue
 
-                if self.turn == Color.WHITE:
+                if attacker == Color.BLACK:
                     if piece_type in [PieceType.BLACK_ROOK, PieceType.BLACK_QUEEN]:
                         return True
                     else:
@@ -504,7 +695,9 @@ class Board:
                         break
         return False
 
-    def is_checked_by_bishop_or_queen(self, king_square: Square) -> bool:
+    def is_attacked_by_bishop_or_queen(
+        self, king_square: Square, attacker: Color
+    ) -> bool:
         king_x, king_y = king_square.get_xy()
 
         for dx, dy in BISHOP_DIRECTIONS:
@@ -522,7 +715,7 @@ class Board:
                 if piece_type == PieceType.EMPTY:
                     continue
 
-                if self.turn == Color.WHITE:
+                if attacker == Color.BLACK:
                     if piece_type in [PieceType.BLACK_BISHOP, PieceType.BLACK_QUEEN]:
                         return True
                     else:
@@ -535,13 +728,13 @@ class Board:
 
         return False
 
-    def is_checked_by_pawn(self, king_square: Square) -> bool:
+    def is_attacked_by_pawn(self, king_square: Square, attacker: Color) -> bool:
         king_x, king_y = king_square.get_xy()
 
         pawn_squares: List[Square] = []
         for dx in [-1, 1]:
             pawn_x = king_x + dx
-            pawn_y = king_y - PAWN_DELTA_Y[self.turn.opponent()]
+            pawn_y = king_y - PAWN_DELTA_Y[attacker]
 
             try:
                 pawn_square = Square.from_xy(pawn_x, pawn_y)
@@ -551,7 +744,7 @@ class Board:
             pawn_squares.append(pawn_square)
 
         for pawn_square in pawn_squares:
-            if self.turn == Color.WHITE:
+            if attacker == Color.BLACK:
                 if self.fields[pawn_square] == PieceType.BLACK_PAWN:
                     return True
             else:
@@ -560,11 +753,13 @@ class Board:
 
         return False
 
-    def is_checked(self) -> bool:
+    def is_checked(self, color: Color) -> bool:
         """
         Returns whether the king of the player to move is under attack
         """
-        if self.turn == Color.WHITE:
+        assert color != Color.NOBODY
+
+        if color == Color.WHITE:
             king_squares = self.find_pieces(PieceType.WHITE_KING)
         else:
             king_squares = self.find_pieces(PieceType.BLACK_KING)
@@ -572,18 +767,15 @@ class Board:
         assert len(king_squares) == 1
         king_square = king_squares[0]
 
-        return (
-            self.is_checked_by_knight(king_square)
-            or self.is_checked_by_rook_or_queen(king_square)
-            or self.is_checked_by_bishop_or_queen(king_square)
-            or self.is_checked_by_pawn(king_square)
-        )
+        return self.is_attacked(king_square, color.opponent())
 
-    def is_checkmate(self) -> bool:
-        """
-        Returns whether the king of the player to move is checkmated
-        """
-        return False  # TODO
+    def is_attacked(self, square: Square, attacker: Color) -> bool:
+        return (
+            self.is_attacked_by_knight(square, attacker)
+            or self.is_attacked_by_rook_or_queen(square, attacker)
+            or self.is_attacked_by_bishop_or_queen(square, attacker)
+            or self.is_attacked_by_pawn(square, attacker)
+        )
 
     def get_moves(self) -> List["Board"]:
         moves: List["Board"] = []
@@ -624,4 +816,24 @@ class Board:
 
         moves += self.get_castling_moves()
 
-        return moves
+        safe_moves: List["Board"] = []
+
+        for move in moves:
+            if not move.is_checked(self.turn):
+                safe_moves.append(move)
+
+        return safe_moves
+
+    def is_checkmate(self) -> bool:
+        """
+        Returns whether the king of the player to move is checkmated
+        """
+        moves = self.get_moves()
+        return self.is_checked(self.turn) and len(moves) == 0
+
+    def is_stalemate(self) -> bool:
+        """
+        Returns whether player to move has no moves but is not in check
+        """
+        moves = self.get_moves()
+        return not self.is_checked(self.turn) and len(moves) == 0
