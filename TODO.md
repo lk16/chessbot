@@ -21,8 +21,11 @@ Things to consider
 
 # Coming up
 - fix bugs to do with opening tree sizes using [Chessnut](https://github.com/cgearhart/Chessnut)
+
 - build a bot
 - play bot vs bot
+- fix bug: king can capture other king
 - play human vs bot
+- check for three-fold repetition
 - improve bot search performance
 - play tournament of bots
