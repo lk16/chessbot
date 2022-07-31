@@ -23,9 +23,13 @@ Every last commit after a stream ends gets a tag. That way progress can be seen 
 - Add all pawn moves, including promotion, capturing and "en passent"
 
 ## [stream-04](https://github.com/lk16/chessbot/tree/stream-04)
+- Add Board/FEN conversion (off-stream)
 - Bugfix: capture and promote at the same time
 - Detect check
-- Add Board/FEN conversion (off-stream)
+- Castling
+- Prevent moves that put yourself in check
+
+
 
 ## See also
 Future features and fixes can be found in the [TODO](./TODO.md) file.
