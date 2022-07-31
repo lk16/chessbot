@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from datetime import datetime
 from typing import List
 
 from chessbot.board import Board
@@ -21,8 +22,18 @@ def main() -> None:
     board = Board.start()
 
     for depth in range(1, 6):
+
+        before = datetime.now()
         desc_count = len(get_decendants(board, depth))
-        print(f"At depth {depth}: found {desc_count} descendants.")
+        after = datetime.now()
+
+        seconds = (after - before).total_seconds()
+
+        speed = desc_count / seconds
+
+        print(
+            f"depth {depth:>2} | {desc_count:>10} descendants | {seconds:7.2f} sec | {speed:7.0f} boards/sec"
+        )
 
 
 if __name__ == "__main__":
