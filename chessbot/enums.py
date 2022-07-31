@@ -128,3 +128,12 @@ class Castling(IntEnum):
     WHITE_LONG = 1
     BLACK_SHORT = 2
     BLACK_LONG = 3
+
+
+class GameState(IntEnum):
+    NORMAL = 0
+    STALEMATE = 1
+    CHECKMATE = 2
+    INSUFFICIENT_MATERIAL = 3
+    REPETITION = 4
+    FIFTY_MOVE_RULE = 5

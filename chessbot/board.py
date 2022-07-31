@@ -1,4 +1,4 @@
-from typing import Any, Final, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Final, Iterable, List, Optional, Tuple
 
 from chessbot.board_printer import print_board
 from chessbot.constants import (
@@ -231,11 +231,6 @@ class Board:
 
     def show(self, *args: Any, **kwargs: Any) -> None:
         print_board(self, *args, **kwargs)
-        print("Allowed castling: ", end="")
-        for c in Castling:
-            if self.castling[c]:
-                print(f"{c.name} ", end="")
-        print("")
 
     def find_pieces(self, piece_type: PieceType) -> List[Square]:
         squares: List[Square] = []
@@ -848,3 +843,11 @@ class Board:
         """
         moves = self.get_moves()
         return not self.is_checked(self.turn) and len(moves) == 0
+
+    def count_piece_types(self) -> Dict[PieceType, int]:
+        counts = {piece_type: 0 for piece_type in PieceType}
+
+        for field in self.fields:
+            counts[field] += 1
+
+        return counts
