@@ -760,8 +760,10 @@ class Board:
 
     def is_checked(self, color: Color) -> bool:
         """
-        Returns whether the king of the player to move is under attack
+        Returns whether the king of the specified player is under attack
         """
+        # TODO color should always be self.turn, remove color argument
+
         assert color != Color.NOBODY
 
         if color == Color.WHITE:

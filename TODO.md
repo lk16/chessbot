@@ -1,8 +1,6 @@
 
 # TODO
 
-
-
 ## Coming up
 - create smarter bot
 - play human vs bot

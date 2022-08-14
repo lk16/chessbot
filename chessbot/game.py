@@ -2,15 +2,15 @@ from typing import Optional, Tuple
 
 from chessbot.board import Board
 from chessbot.enums import Color, GameState, PieceType
-from chessbot.players.random import RandomMoveBot
+from chessbot.players.base import BasePlayer
 
 
 class Game:
-    def __init__(self, black: RandomMoveBot, white: RandomMoveBot) -> None:
+    def __init__(self, black: BasePlayer, white: BasePlayer) -> None:
         self.players = [black, white]
         self.board = Board.start()
 
-    def get_player_to_move(self) -> RandomMoveBot:
+    def get_player_to_move(self) -> BasePlayer:
         return self.players[self.board.turn]
 
     def get_game_state(self) -> Tuple[GameState, Optional[Color]]:
