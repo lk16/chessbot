@@ -35,6 +35,11 @@ Every last commit after a stream ends gets a tag. That way progress can be seen 
 - Fix bug: king can capture other king
 - Detect game endings
 
+#### [stream-06](https://github.com/lk16/chessbot/tree/stream-06)
+- Implement tree-search using minimax
+- Add smarter bots `MaterialBot` and `PawnPusherBot`
+- Fix assertion bug in `Game`
+
 ### See also
 Future features and fixes can be found in the [TODO](./TODO.md) file.
 
