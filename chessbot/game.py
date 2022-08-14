@@ -70,7 +70,7 @@ class Game:
             print("Draw by stalemate.")
 
         elif game_state == GameState.CHECKMATE:
-            assert winner
+            assert winner is not None
             print(f"{winner.name} won by checkmate.")
 
         elif game_state == GameState.INSUFFICIENT_MATERIAL:
