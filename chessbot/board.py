@@ -811,48 +811,41 @@ class Board:
         moves: List["Board"] = []
 
         if self.turn == Color.WHITE:
-            king_squares = self.find_pieces(PieceType.WHITE_KING)
-            knight_squares = self.find_pieces(PieceType.WHITE_KNIGHT)
-            rook_squares = self.find_pieces(PieceType.WHITE_ROOK)
-            bishop_squares = self.find_pieces(PieceType.WHITE_BISHOP)
-            queen_squares = self.find_pieces(PieceType.WHITE_QUEEN)
-            pawn_squares = self.find_pieces(PieceType.WHITE_PAWN)
+            for square in range(64):
+                piece_type = self.fields[square]
+
+                if piece_type == PieceType.WHITE_KING:
+                    moves += self.get_king_moves(square)
+                elif piece_type == PieceType.WHITE_KNIGHT:
+                    moves += self.get_knight_moves(square)
+                elif piece_type == PieceType.WHITE_ROOK:
+                    moves += self.get_rook_moves(square)
+                elif piece_type == PieceType.WHITE_BISHOP:
+                    moves += self.get_bishop_moves(square)
+                elif piece_type == PieceType.WHITE_QUEEN:
+                    moves += self.get_queen_moves(square)
+                elif piece_type == PieceType.WHITE_PAWN:
+                    moves += self.get_pawn_moves(square)
         else:
-            assert self.turn == Color.BLACK
-            king_squares = self.find_pieces(PieceType.BLACK_KING)
-            knight_squares = self.find_pieces(PieceType.BLACK_KNIGHT)
-            rook_squares = self.find_pieces(PieceType.BLACK_ROOK)
-            bishop_squares = self.find_pieces(PieceType.BLACK_BISHOP)
-            queen_squares = self.find_pieces(PieceType.BLACK_QUEEN)
-            pawn_squares = self.find_pieces(PieceType.BLACK_PAWN)
+            for square in range(64):
+                piece_type = self.fields[square]
 
-        for king_square in king_squares:
-            moves += self.get_king_moves(king_square)
-
-        for knight_square in knight_squares:
-            moves += self.get_knight_moves(knight_square)
-
-        for rook_square in rook_squares:
-            moves += self.get_rook_moves(rook_square)
-
-        for bishop_square in bishop_squares:
-            moves += self.get_bishop_moves(bishop_square)
-
-        for queen_square in queen_squares:
-            moves += self.get_queen_moves(queen_square)
-
-        for pawn_square in pawn_squares:
-            moves += self.get_pawn_moves(pawn_square)
+                if piece_type == PieceType.BLACK_KING:
+                    moves += self.get_king_moves(square)
+                elif piece_type == PieceType.BLACK_KNIGHT:
+                    moves += self.get_knight_moves(square)
+                elif piece_type == PieceType.BLACK_ROOK:
+                    moves += self.get_rook_moves(square)
+                elif piece_type == PieceType.BLACK_BISHOP:
+                    moves += self.get_bishop_moves(square)
+                elif piece_type == PieceType.BLACK_QUEEN:
+                    moves += self.get_queen_moves(square)
+                elif piece_type == PieceType.BLACK_PAWN:
+                    moves += self.get_pawn_moves(square)
 
         moves += self.get_castling_moves()
 
-        safe_moves: List["Board"] = []
-
-        for move in moves:
-            if not move.is_checked(self.turn):
-                safe_moves.append(move)
-
-        return safe_moves
+        return [move for move in moves if not move.is_checked(self.turn)]
 
     def is_checkmate(self) -> bool:
         """
