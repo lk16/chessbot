@@ -23,6 +23,8 @@ from chessbot.exceptions import InvalidSquareException
 
 
 class Board:
+    __slots__ = ("fields", "turn", "en_passent_column", "castling")
+
     def __init__(
         self,
         turn: Color,
