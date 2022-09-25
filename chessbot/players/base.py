@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 from chessbot.board import Board
@@ -19,9 +20,14 @@ class BasePlayer:
 class BaseBot(BasePlayer):
     def __init__(self, color: Color, depth: int) -> None:
         self.depth = depth
+        self.nodes = 0
+        self.search_start = datetime.now()
         super().__init__(color)
 
     def do_move(self, board: Board) -> Board:
+        self.nodes = 0
+        self.search_start = datetime.now()
+
         moves = board.get_moves()
         assert moves
 
@@ -32,14 +38,20 @@ class BaseBot(BasePlayer):
         for i, move in enumerate(moves):
             heur = self.minimax(move, self.depth, False)
 
+            speed = self.search_speed()
+            print(
+                f"{i+1:>2}/{len(moves):>2} | heur = {heur:>4} | {speed:7.0f} nodes/sec"
+            )
+
             if heur > best_heuristic:
-                print(f"{i+1:>2}/{len(moves):>2}: heur = {heur}")
                 best_heuristic = heur
                 best_move = move
 
         return best_move
 
     def minimax(self, board: Board, depth: int, is_max: bool) -> int:
+        self.nodes += 1
+
         if depth == 0:
             return self.heuristic(board)
 
@@ -63,6 +75,10 @@ class BaseBot(BasePlayer):
             return max(heurs)
         else:
             return min(heurs)
+
+    def search_speed(self) -> float:
+        elapsed_seconds = (datetime.now() - self.search_start).total_seconds()
+        return self.nodes / elapsed_seconds
 
     def heuristic(self, board: Board) -> int:
         raise NotImplementedError
