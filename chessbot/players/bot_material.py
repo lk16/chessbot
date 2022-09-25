@@ -4,33 +4,31 @@ from chessbot.players.base import BaseBot
 
 
 class MaterialBot(BaseBot):
+    def __init__(self, color: Color, depth: int) -> None:
+        self.piece_type_values = {
+            PieceType.EMPTY: 0,
+            PieceType.BLACK_PAWN: -1,
+            PieceType.BLACK_ROOK: -5,
+            PieceType.BLACK_KNIGHT: -3,
+            PieceType.BLACK_KING: -9001,
+            PieceType.BLACK_QUEEN: -9,
+            PieceType.BLACK_BISHOP: -3,
+            PieceType.WHITE_PAWN: 1,
+            PieceType.WHITE_ROOK: 5,
+            PieceType.WHITE_KNIGHT: 3,
+            PieceType.WHITE_KING: 9001,
+            PieceType.WHITE_QUEEN: 9,
+            PieceType.WHITE_BISHOP: 3,
+        }
+        super().__init__(color, depth)
+
     def heuristic(self, board: Board) -> int:
-        black_material = 0
-        white_material = 0
+        total = 0
 
         for field in board.fields:
-            if field == PieceType.BLACK_PAWN:
-                black_material += 1
-            elif field == PieceType.BLACK_ROOK:
-                black_material += 5
-            elif field == PieceType.BLACK_KNIGHT:
-                black_material += 3
-            elif field == PieceType.BLACK_QUEEN:
-                black_material += 9
-            elif field == PieceType.BLACK_BISHOP:
-                black_material += 3
-            elif field == PieceType.WHITE_PAWN:
-                white_material += 1
-            elif field == PieceType.WHITE_ROOK:
-                white_material += 5
-            elif field == PieceType.WHITE_KNIGHT:
-                white_material += 3
-            elif field == PieceType.WHITE_QUEEN:
-                white_material += 9
-            elif field == PieceType.WHITE_BISHOP:
-                white_material += 3
+            total += self.piece_type_values[field]
 
-        if self.color == Color.WHITE:
-            return white_material - black_material
-        else:
-            return black_material - white_material
+        if self.color == Color.BLACK:
+            total *= -1
+
+        return total
