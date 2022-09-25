@@ -7,8 +7,8 @@ from chessbot.players.bot_pawn_pusher import PawnPusherBot
 
 
 def main() -> None:
-    white_player = MaterialBot(Color.WHITE, 2)
-    black_player = PawnPusherBot(Color.BLACK, 2)
+    white_player = MaterialBot(Color.WHITE, 3)
+    black_player = PawnPusherBot(Color.BLACK, 3)
 
     game = Game(black=black_player, white=white_player)
     game.play()

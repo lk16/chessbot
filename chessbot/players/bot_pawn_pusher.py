@@ -5,18 +5,21 @@ from chessbot.players.base import BaseBot
 
 class PawnPusherBot(BaseBot):
     def heuristic(self, board: Board) -> int:
-        black_total = 0
-        white_total = 0
+        total = 0
 
         for square_id, field in enumerate(board.fields):
             y = square_id // 8
 
             if field == PieceType.BLACK_PAWN:
-                black_total += y - 1
+                total -= y - 1
             elif field == PieceType.WHITE_PAWN:
-                white_total += 6 - y
+                total += 6 - y
+            elif field == PieceType.BLACK_QUEEN:
+                total -= 9
+            elif field == PieceType.WHITE_QUEEN:
+                total += 9
 
-        if self.color == Color.WHITE:
-            return white_total - black_total
-        else:
-            return black_total - white_total
+        if self.color == Color.BLACK:
+            total *= -1
+
+        return total

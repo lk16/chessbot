@@ -50,14 +50,7 @@ class Game:
     def play(self) -> None:
         self.board.show()
 
-        # TODO remove after profiling
-        remainig_moves = 30
-
         while True:
-            if remainig_moves == 0:
-                print("Aborting game early for profiling")
-                return
-
             game_state, winner = self.get_game_state()
 
             if game_state != GameState.NORMAL:
@@ -66,8 +59,6 @@ class Game:
             player_to_move = self.get_player_to_move()
             self.board = player_to_move.do_move(self.board)
             self.board.show()
-
-            remainig_moves -= 1
 
         self.board.show()
 
