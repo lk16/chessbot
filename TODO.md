@@ -3,7 +3,7 @@
 
 ## This stream
 - [x] print bot search speed
-- [ ] using `__slots__` for `class Board`
+- [x] using `__slots__` for `class Board`
 - [ ] benchmark to find bottleneck
 - [ ] pre-compute knight and king moves?
 - [ ] different board layout in memory

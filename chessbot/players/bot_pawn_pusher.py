@@ -1,5 +1,5 @@
 from chessbot.board import Board
-from chessbot.enums import Color, PieceType, Square
+from chessbot.enums import Color, PieceType
 from chessbot.players.base import BaseBot
 
 
@@ -9,8 +9,8 @@ class PawnPusherBot(BaseBot):
         white_total = 0
 
         for square_id, field in enumerate(board.fields):
-            square = Square(square_id)
-            _, y = square.get_xy()
+            y = square_id // 8
+
             if field == PieceType.BLACK_PAWN:
                 black_total += y - 1
             elif field == PieceType.WHITE_PAWN:

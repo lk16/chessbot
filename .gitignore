@@ -1,3 +1,4 @@
 .python-version
 .envrc
 __pycache__
+main.prof

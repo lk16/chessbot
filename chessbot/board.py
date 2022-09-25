@@ -18,8 +18,27 @@ from chessbot.constants import (
     QUEEN_DIRECTIONS,
     ROOK_DIRECTIONS,
 )
-from chessbot.enums import Castling, Color, PieceType, Square
-from chessbot.exceptions import InvalidSquareException
+from chessbot.enums import (
+    SQUARE_A1,
+    SQUARE_A8,
+    SQUARE_B1,
+    SQUARE_B8,
+    SQUARE_C1,
+    SQUARE_C8,
+    SQUARE_D1,
+    SQUARE_D8,
+    SQUARE_E1,
+    SQUARE_E8,
+    SQUARE_F1,
+    SQUARE_F8,
+    SQUARE_G1,
+    SQUARE_G8,
+    SQUARE_H1,
+    SQUARE_H8,
+    Castling,
+    Color,
+    PieceType,
+)
 
 
 class Board:
@@ -193,8 +212,8 @@ class Board:
 
     def move_piece(
         self,
-        from_: Square,
-        to: Square,
+        from_: int,
+        to: int,
         en_passent_column: Optional[int] = None,
         disallow_castling: Optional[List[Castling]] = None,
     ) -> "Board":
@@ -222,27 +241,28 @@ class Board:
             castling=castling,
         )
 
-    def promote(self, from_: Square, to: Square, piece_type: PieceType) -> "Board":
+    def promote(self, from_: int, to: int, piece_type: PieceType) -> "Board":
         fields = list(self.fields)
         fields[from_] = PieceType.EMPTY
         fields[to] = piece_type
         return Board(turn=self.turn.opponent(), fields=fields)
 
-    def get_piece_color(self, square: Square) -> Color:
+    def get_piece_color(self, square: int) -> Color:
         return self.fields[square].get_color()
 
     def show(self, *args: Any, **kwargs: Any) -> None:
         print_board(self, *args, **kwargs)
 
-    def find_pieces(self, piece_type: PieceType) -> List[Square]:
-        squares: List[Square] = []
+    def find_pieces(self, piece_type: PieceType) -> List[int]:
+        squares: List[int] = []
         for square in range(0, 64):
             if self.fields[square] == piece_type:
-                squares.append(Square(square))
+                squares.append(square)
         return squares
 
-    def get_knight_moves(self, square: Square) -> List["Board"]:
-        x, y = square.get_xy()
+    def get_knight_moves(self, square: int) -> List["Board"]:
+        x = square % 8
+        y = square // 8
 
         children: List["Board"] = []
 
@@ -250,11 +270,11 @@ class Board:
             move_x = x + dx
             move_y = y + dy
 
-            try:
-                move_square = Square.from_xy(move_x, move_y)
-            except InvalidSquareException:
+            if move_y not in range(8) or move_x not in range(8):
                 # we're walking off the board
                 continue
+
+            move_square = (8 * move_y) + move_x
 
             if self.get_piece_color(move_square) == self.turn:
                 # we're about to capture our own piece
@@ -264,8 +284,9 @@ class Board:
 
         return children
 
-    def get_king_moves(self, square: Square) -> List["Board"]:
-        x, y = square.get_xy()
+    def get_king_moves(self, square: int) -> List["Board"]:
+        x = square % 8
+        y = square // 8
 
         children: List["Board"] = []
 
@@ -273,11 +294,11 @@ class Board:
             move_x = x + dx
             move_y = y + dy
 
-            try:
-                move_square = Square.from_xy(move_x, move_y)
-            except InvalidSquareException:
+            if move_y not in range(8) or move_x not in range(8):
                 # we're walking off the board
                 continue
+
+            move_square = (8 * move_y) + move_x
 
             if self.get_piece_color(move_square) == self.turn:
                 # we're about to capture our own piece
@@ -300,12 +321,13 @@ class Board:
 
     def get_range_moves_one_direction(
         self,
-        square: Square,
+        square: int,
         dx: int,
         dy: int,
         disallow_castling: Optional[List[Castling]] = None,
     ) -> List["Board"]:
-        x, y = square.get_xy()
+        x = square % 8
+        y = square // 8
 
         if dx > 0:
             max_dx = 7 - x
@@ -329,7 +351,7 @@ class Board:
             move_x = x + (dx * distance)
             move_y = y + (dy * distance)
 
-            move_square = Square.from_xy(move_x, move_y)
+            move_square = (8 * move_y) + move_x
 
             target_piece_color = self.get_piece_color(move_square)
 
@@ -354,18 +376,18 @@ class Board:
 
         return children
 
-    def get_rook_moves(self, square: Square) -> List["Board"]:
+    def get_rook_moves(self, square: int) -> List["Board"]:
         disallow_castling = None
 
         if self.turn == Color.WHITE:
-            if square == Square.A1:
+            if square == SQUARE_A1:
                 disallow_castling = [Castling.WHITE_LONG]
-            elif square == Square.H1:
+            elif square == SQUARE_H1:
                 disallow_castling = [Castling.WHITE_SHORT]
         else:
-            if square == Square.A8:
+            if square == SQUARE_A8:
                 disallow_castling = [Castling.BLACK_LONG]
-            elif square == Square.H8:
+            elif square == SQUARE_H8:
                 disallow_castling = [Castling.BLACK_SHORT]
 
         children: List["Board"] = []
@@ -375,32 +397,33 @@ class Board:
             )
         return children
 
-    def get_bishop_moves(self, square: Square) -> List["Board"]:
+    def get_bishop_moves(self, square: int) -> List["Board"]:
         children: List["Board"] = []
         for dx, dy in BISHOP_DIRECTIONS:
             children += self.get_range_moves_one_direction(square, dx, dy)
         return children
 
-    def get_queen_moves(self, square: Square) -> List["Board"]:
+    def get_queen_moves(self, square: int) -> List["Board"]:
         children: List["Board"] = []
         for dx, dy in QUEEN_DIRECTIONS:
             children += self.get_range_moves_one_direction(square, dx, dy)
         return children
 
-    def get_pawn_capture_moves(self, square: Square) -> List["Board"]:
-        x, y = square.get_xy()
+    def get_pawn_capture_moves(self, square: int) -> List["Board"]:
+        x = square % 8
+        y = square // 8
 
-        capture_squares: List[Square] = []
+        capture_squares: List[int] = []
         moves: List["Board"] = []
 
         pawn_delta = PAWN_DELTA_Y[self.turn]
 
         if x != 0:
-            left_capture_square = Square.from_xy(x - 1, y + pawn_delta)
+            left_capture_square = (8 * (y + pawn_delta)) + (x - 1)
             capture_squares.append(left_capture_square)
 
         if x != 7:
-            right_capture_square = Square.from_xy(x + 1, y + pawn_delta)
+            right_capture_square = (8 * (y + pawn_delta)) + (x + 1)
             capture_squares.append(right_capture_square)
 
         pre_promotion_y = PRE_PROMOTION_Y[self.turn]
@@ -416,14 +439,15 @@ class Board:
 
         return moves
 
-    def get_pawn_push_moves(self, square: Square) -> List["Board"]:
+    def get_pawn_push_moves(self, square: int) -> List["Board"]:
         """
         Return moves of pawn moving forward including promotion
         """
-        x, y = square.get_xy()
+        x = square % 8
+        y = square // 8
 
         pawn_delta = PAWN_DELTA_Y[self.turn]
-        forward = Square.from_xy(x, y + pawn_delta)
+        forward = (8 * (y + pawn_delta)) + x
 
         start_y = PAWN_START_Y[self.turn]
         pre_promotion_y = PRE_PROMOTION_Y[self.turn]
@@ -435,7 +459,7 @@ class Board:
                 moves.append(self.move_piece(square, forward))
 
             if y == start_y:
-                two_forward = Square.from_xy(x, y + (2 * pawn_delta))
+                two_forward = (8 * y + (2 * pawn_delta)) + x
                 if self.get_piece_color(two_forward) == Color.NOBODY:
                     moves.append(
                         self.move_piece(square, two_forward, en_passent_column=x)
@@ -447,8 +471,9 @@ class Board:
 
         return moves
 
-    def get_pawn_en_passent_moves(self, square: Square) -> List["Board"]:
-        x, y = square.get_xy()
+    def get_pawn_en_passent_moves(self, square: int) -> List["Board"]:
+        x = square % 8
+        y = square // 8
 
         if not self.en_passent_column:
             return []
@@ -459,18 +484,14 @@ class Board:
         if x not in [self.en_passent_column + 1, self.en_passent_column - 1]:
             return []
 
-        move_square = Square.from_xy(
-            self.en_passent_column,
-            y + PAWN_DELTA_Y[self.turn],
-        )
+        move_square = (8 * (y + PAWN_DELTA_Y[self.turn])) + self.en_passent_column
 
         if self.fields[move_square] != PieceType.EMPTY:
             return []
 
-        en_passent_square = Square.from_xy(
-            self.en_passent_column,
-            EN_PASSENT_CAPTURER_Y[self.turn],
-        )
+        en_passent_square = (
+            8 * (EN_PASSENT_CAPTURER_Y[self.turn])
+        ) + self.en_passent_column
 
         fields = list(self.fields)
         fields[move_square] = self.fields[square]
@@ -480,7 +501,7 @@ class Board:
         move = Board(fields=fields, turn=self.turn.opponent())
         return [move]
 
-    def get_pawn_moves(self, square: Square) -> List["Board"]:
+    def get_pawn_moves(self, square: int) -> List["Board"]:
         return (
             self.get_pawn_push_moves(square)
             + self.get_pawn_capture_moves(square)
@@ -500,17 +521,17 @@ class Board:
         # The king does not pass through a square that is attacked by an opposing piece.
         if (
             self.castling[Castling.WHITE_SHORT]
-            and self.fields[Square.F1] == PieceType.EMPTY
-            and self.fields[Square.G1] == PieceType.EMPTY
-            and not self.is_attacked(Square.F1, self.turn.opponent())
+            and self.fields[SQUARE_F1] == PieceType.EMPTY
+            and self.fields[SQUARE_G1] == PieceType.EMPTY
+            and not self.is_attacked(SQUARE_F1, self.turn.opponent())
         ):
             # we CAN castle short as white
 
             fields = list(self.fields)
-            fields[Square.E1] = PieceType.EMPTY
-            fields[Square.F1] = PieceType.WHITE_ROOK
-            fields[Square.G1] = PieceType.WHITE_KING
-            fields[Square.H1] = PieceType.EMPTY
+            fields[SQUARE_E1] = PieceType.EMPTY
+            fields[SQUARE_F1] = PieceType.WHITE_ROOK
+            fields[SQUARE_G1] = PieceType.WHITE_KING
+            fields[SQUARE_H1] = PieceType.EMPTY
 
             castling = list(self.castling)
             castling[Castling.WHITE_SHORT] = False
@@ -529,18 +550,18 @@ class Board:
         # The king does not pass through a square that is attacked by an opposing piece.
         if (
             self.castling[Castling.WHITE_LONG]
-            and self.fields[Square.B1] == PieceType.EMPTY
-            and self.fields[Square.C1] == PieceType.EMPTY
-            and self.fields[Square.D1] == PieceType.EMPTY
-            and not self.is_attacked(Square.D1, self.turn.opponent())
+            and self.fields[SQUARE_B1] == PieceType.EMPTY
+            and self.fields[SQUARE_C1] == PieceType.EMPTY
+            and self.fields[SQUARE_D1] == PieceType.EMPTY
+            and not self.is_attacked(SQUARE_D1, self.turn.opponent())
         ):
             # we CAN castle long as white
 
             fields = list(self.fields)
-            fields[Square.A1] = PieceType.EMPTY
-            fields[Square.C1] = PieceType.WHITE_KING
-            fields[Square.D1] = PieceType.WHITE_ROOK
-            fields[Square.E1] = PieceType.EMPTY
+            fields[SQUARE_A1] = PieceType.EMPTY
+            fields[SQUARE_C1] = PieceType.WHITE_KING
+            fields[SQUARE_D1] = PieceType.WHITE_ROOK
+            fields[SQUARE_E1] = PieceType.EMPTY
 
             castling = list(self.castling)
             castling[Castling.WHITE_SHORT] = False
@@ -568,17 +589,17 @@ class Board:
         # The king does not pass through a square that is attacked by an opposing piece.
         if (
             self.castling[Castling.BLACK_SHORT]
-            and self.fields[Square.F8] == PieceType.EMPTY
-            and self.fields[Square.G8] == PieceType.EMPTY
-            and not self.is_attacked(Square.F8, self.turn.opponent())
+            and self.fields[SQUARE_F8] == PieceType.EMPTY
+            and self.fields[SQUARE_G8] == PieceType.EMPTY
+            and not self.is_attacked(SQUARE_F8, self.turn.opponent())
         ):
             # we CAN castle short as black
 
             fields = list(self.fields)
-            fields[Square.E8] = PieceType.EMPTY
-            fields[Square.F8] = PieceType.BLACK_ROOK
-            fields[Square.G8] = PieceType.BLACK_KING
-            fields[Square.H8] = PieceType.EMPTY
+            fields[SQUARE_E8] = PieceType.EMPTY
+            fields[SQUARE_F8] = PieceType.BLACK_ROOK
+            fields[SQUARE_G8] = PieceType.BLACK_KING
+            fields[SQUARE_H8] = PieceType.EMPTY
 
             castling = list(self.castling)
             castling[Castling.BLACK_SHORT] = False
@@ -597,18 +618,18 @@ class Board:
         # The king does not pass through a square that is attacked by an opposing piece.
         if (
             self.castling[Castling.BLACK_LONG]
-            and self.fields[Square.B8] == PieceType.EMPTY
-            and self.fields[Square.C8] == PieceType.EMPTY
-            and self.fields[Square.D8] == PieceType.EMPTY
-            and not self.is_attacked(Square.D8, self.turn.opponent())
+            and self.fields[SQUARE_B8] == PieceType.EMPTY
+            and self.fields[SQUARE_C8] == PieceType.EMPTY
+            and self.fields[SQUARE_D8] == PieceType.EMPTY
+            and not self.is_attacked(SQUARE_D8, self.turn.opponent())
         ):
             # we CAN castle long as black
 
             fields = list(self.fields)
-            fields[Square.A8] = PieceType.EMPTY
-            fields[Square.C8] = PieceType.BLACK_KING
-            fields[Square.D8] = PieceType.BLACK_ROOK
-            fields[Square.E8] = PieceType.EMPTY
+            fields[SQUARE_A8] = PieceType.EMPTY
+            fields[SQUARE_C8] = PieceType.BLACK_KING
+            fields[SQUARE_D8] = PieceType.BLACK_ROOK
+            fields[SQUARE_E8] = PieceType.EMPTY
 
             castling = list(self.castling)
             castling[Castling.BLACK_SHORT] = False
@@ -630,17 +651,18 @@ class Board:
         else:
             return self.get_black_castling_moves()
 
-    def is_attacked_by_knight(self, king_square: Square, attacker: Color) -> bool:
-        king_x, king_y = king_square.get_xy()
+    def is_attacked_by_knight(self, king_square: int, attacker: Color) -> bool:
+        king_x = king_square % 8
+        king_y = king_square // 8
 
         for dx, dy in KNIGHT_DELTAS:
             knight_x = king_x + dx
             knight_y = king_y + dy
 
-            try:
-                knight_square = Square.from_xy(knight_x, knight_y)
-            except InvalidSquareException:
+            if knight_y not in range(8) or knight_x not in range(8):
                 continue
+
+            knight_square = (8 * knight_y) + knight_x
 
             if attacker == Color.BLACK:
                 if self.fields[knight_square] == PieceType.BLACK_KNIGHT:
@@ -651,20 +673,19 @@ class Board:
 
         return False
 
-    def is_attacked_by_rook_or_queen(
-        self, king_square: Square, attacker: Color
-    ) -> bool:
-        king_x, king_y = king_square.get_xy()
+    def is_attacked_by_rook_or_queen(self, king_square: int, attacker: Color) -> bool:
+        king_x = king_square % 8
+        king_y = king_square // 8
 
         for dx, dy in ROOK_DIRECTIONS:
             for distance in range(1, 8):
                 piece_x = king_x + (dx * distance)
                 piece_y = king_y + (dy * distance)
 
-                try:
-                    piece_square = Square.from_xy(piece_x, piece_y)
-                except InvalidSquareException:
+                if piece_y not in range(8) or piece_x not in range(8):
                     break
+
+                piece_square = (8 * piece_y) + piece_x
 
                 piece_type = self.fields[piece_square]
 
@@ -683,21 +704,19 @@ class Board:
                         break
         return False
 
-    def is_attacked_by_bishop_or_queen(
-        self, king_square: Square, attacker: Color
-    ) -> bool:
-        king_x, king_y = king_square.get_xy()
+    def is_attacked_by_bishop_or_queen(self, king_square: int, attacker: Color) -> bool:
+        king_x = king_square % 8
+        king_y = king_square // 8
 
         for dx, dy in BISHOP_DIRECTIONS:
             for distance in range(1, 8):
                 piece_x = king_x + (dx * distance)
                 piece_y = king_y + (dy * distance)
 
-                try:
-                    piece_square = Square.from_xy(piece_x, piece_y)
-                except InvalidSquareException:
+                if piece_x not in range(8) or piece_y not in range(8):
                     break
 
+                piece_square = (8 * piece_y) + piece_x
                 piece_type = self.fields[piece_square]
 
                 if piece_type == PieceType.EMPTY:
@@ -716,19 +735,19 @@ class Board:
 
         return False
 
-    def is_attacked_by_pawn(self, king_square: Square, attacker: Color) -> bool:
-        king_x, king_y = king_square.get_xy()
+    def is_attacked_by_pawn(self, king_square: int, attacker: Color) -> bool:
+        king_x = king_square % 8
+        king_y = king_square // 8
 
-        pawn_squares: List[Square] = []
+        pawn_squares: List[int] = []
         for dx in [-1, 1]:
             pawn_x = king_x + dx
             pawn_y = king_y - PAWN_DELTA_Y[attacker]
 
-            try:
-                pawn_square = Square.from_xy(pawn_x, pawn_y)
-            except InvalidSquareException:
+            if pawn_x not in range(8) or pawn_y not in range(8):
                 continue
 
+            pawn_square = (8 * pawn_y) + pawn_x
             pawn_squares.append(pawn_square)
 
         for pawn_square in pawn_squares:
@@ -741,19 +760,20 @@ class Board:
 
         return False
 
-    def is_attacked_by_king(self, king_square: Square, attacker: Color) -> bool:
+    def is_attacked_by_king(self, king_square: int, attacker: Color) -> bool:
         if attacker == Color.WHITE:
             king_piecetype = PieceType.WHITE_KING
         else:
             king_piecetype = PieceType.BLACK_KING
 
-        x, y = king_square.get_xy()
+        x = king_square % 8
+        y = king_square // 8
 
         for dx, dy in KING_DELTAS:
-            try:
-                attacking_king_square = Square.from_xy(x + dx, y + dy)
-            except InvalidSquareException:
+            if (y + dy) not in range(8) or (x + dx) not in range(8):
                 continue
+
+            attacking_king_square = (8 * (y + dy)) + (x + dx)
 
             if self.fields[attacking_king_square] == king_piecetype:
                 return True
@@ -778,7 +798,7 @@ class Board:
 
         return self.is_attacked(king_square, color.opponent())
 
-    def is_attacked(self, square: Square, attacker: Color) -> bool:
+    def is_attacked(self, square: int, attacker: Color) -> bool:
         return (
             self.is_attacked_by_knight(square, attacker)
             or self.is_attacked_by_rook_or_queen(square, attacker)

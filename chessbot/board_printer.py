@@ -1,7 +1,7 @@
 from enum import IntEnum
 from typing import TYPE_CHECKING, List, Optional, Set
 
-from chessbot.enums import Color, PieceType, Square
+from chessbot.enums import Color, PieceType
 
 if TYPE_CHECKING:
     from chessbot.board import Board
@@ -75,7 +75,7 @@ def colorize_piece(piece: PieceType, bg: BashColor) -> str:
     return colorize(text, bg=bg, fg=piece_color)
 
 
-def print_board(board: "Board", red: Set[Square] = set()) -> None:
+def print_board(board: "Board", red: Set[int] = set()) -> None:
 
     # background color by square id (0 up to 63)
     square_colors: List[BashColor] = []
@@ -83,7 +83,7 @@ def print_board(board: "Board", red: Set[Square] = set()) -> None:
     for y in range(8):
         for x in range(8):
             is_light = (x + y) % 2 == 0
-            square = Square(8 * y + x)
+            square = 8 * y + x
 
             if square in red:
                 color = BashColor.HIGHLIGHT_RED

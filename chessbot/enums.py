@@ -1,86 +1,69 @@
 from enum import IntEnum
-from typing import Tuple
 
-from chessbot.exceptions import InvalidSquareException
-
-
-class Square(IntEnum):
-    A8 = 0
-    B8 = 1
-    C8 = 2
-    D8 = 3
-    E8 = 4
-    F8 = 5
-    G8 = 6
-    H8 = 7
-    A7 = 8
-    B7 = 9
-    C7 = 10
-    D7 = 11
-    E7 = 12
-    F7 = 13
-    G7 = 14
-    H7 = 15
-    A6 = 16
-    B6 = 17
-    C6 = 18
-    D6 = 19
-    E6 = 20
-    F6 = 21
-    G6 = 22
-    H6 = 23
-    A5 = 24
-    B5 = 25
-    C5 = 26
-    D5 = 27
-    E5 = 28
-    F5 = 29
-    G5 = 30
-    H5 = 31
-    A4 = 32
-    B4 = 33
-    C4 = 34
-    D4 = 35
-    E4 = 36
-    F4 = 37
-    G4 = 38
-    H4 = 39
-    A3 = 40
-    B3 = 41
-    C3 = 42
-    D3 = 43
-    E3 = 44
-    F3 = 45
-    G3 = 46
-    H3 = 47
-    A2 = 48
-    B2 = 49
-    C2 = 50
-    D2 = 51
-    E2 = 52
-    F2 = 53
-    G2 = 54
-    H2 = 55
-    A1 = 56
-    B1 = 57
-    C1 = 58
-    D1 = 59
-    E1 = 60
-    F1 = 61
-    G1 = 62
-    H1 = 63
-
-    def get_xy(self) -> Tuple[int, int]:
-        x = self % 8  # column, x == 0 being the left most column == file a
-        y = self // 8  # row, y == 0 being the top most row == rank 8
-        return x, y
-
-    @staticmethod
-    def from_xy(x: int, y: int) -> "Square":
-        if x not in range(8) or y not in range(8):
-            raise InvalidSquareException
-
-        return Square(8 * y + x)
+SQUARE_A8 = 0
+SQUARE_B8 = 1
+SQUARE_C8 = 2
+SQUARE_D8 = 3
+SQUARE_E8 = 4
+SQUARE_F8 = 5
+SQUARE_G8 = 6
+SQUARE_H8 = 7
+SQUARE_A7 = 8
+SQUARE_B7 = 9
+SQUARE_C7 = 10
+SQUARE_D7 = 11
+SQUARE_E7 = 12
+SQUARE_F7 = 13
+SQUARE_G7 = 14
+SQUARE_H7 = 15
+SQUARE_A6 = 16
+SQUARE_B6 = 17
+SQUARE_C6 = 18
+SQUARE_D6 = 19
+SQUARE_E6 = 20
+SQUARE_F6 = 21
+SQUARE_G6 = 22
+SQUARE_H6 = 23
+SQUARE_A5 = 24
+SQUARE_B5 = 25
+SQUARE_C5 = 26
+SQUARE_D5 = 27
+SQUARE_E5 = 28
+SQUARE_F5 = 29
+SQUARE_G5 = 30
+SQUARE_H5 = 31
+SQUARE_A4 = 32
+SQUARE_B4 = 33
+SQUARE_C4 = 34
+SQUARE_D4 = 35
+SQUARE_E4 = 36
+SQUARE_F4 = 37
+SQUARE_G4 = 38
+SQUARE_H4 = 39
+SQUARE_A3 = 40
+SQUARE_B3 = 41
+SQUARE_C3 = 42
+SQUARE_D3 = 43
+SQUARE_E3 = 44
+SQUARE_F3 = 45
+SQUARE_G3 = 46
+SQUARE_H3 = 47
+SQUARE_A2 = 48
+SQUARE_B2 = 49
+SQUARE_C2 = 50
+SQUARE_D2 = 51
+SQUARE_E2 = 52
+SQUARE_F2 = 53
+SQUARE_G2 = 54
+SQUARE_H2 = 55
+SQUARE_A1 = 56
+SQUARE_B1 = 57
+SQUARE_C1 = 58
+SQUARE_D1 = 59
+SQUARE_E1 = 60
+SQUARE_F1 = 61
+SQUARE_G1 = 62
+SQUARE_H1 = 63
 
 
 class PieceType(IntEnum):
